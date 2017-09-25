@@ -1,8 +1,8 @@
 {
-    "title": "1 Col Portfolio",
-    "name": "startbootstrap-1-col-portfolio",
+    "title": "Projects Home Page",
+    "name": "eacooper400-homepage",
     "version": "4.0.0-beta",
-    "description": "A one column portfolio HTML template built with Bootstrap",
+    "description": "Created using a one column portfolio HTML template built with Bootstrap",
     "keywords": [
         "css",
         "sass",
@@ -11,7 +11,7 @@
         "theme",
         "template"
     ],
-    "homepage": "https://startbootstrap.com/template-overviews/1-col-portfolio",
+    "homepage": "https://eacooper400.github.io",
     "bugs": {
         "url": "https://github.com/BlackrockDigital/startbootstrap-1-col-portfolio/issues",
         "email": "feedback@startbootstrap.com"
