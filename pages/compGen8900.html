@@ -1,187 +1,181 @@
-<h1 id="computationalgenomicsworkshop">Computational Genomics Workshop:</h1>
-
-<h2 id="rcodingfortheanalysisofsnpdataandappliedpopulationgenetics">R coding for the analysis of SNP data and applied population genetics</h2>
-
-<h3 id="description">Description:</h3>
-
-<p>High-throughput sequencing technology has made it possible to obtain large scale genetic data sets for almost any organism, creating a need for computational tools and skill sets to process these data.  While the bioinformatics workflows for processing raw data into SNPs are typically well delineated, the path for analyzing and interpreting the resulting SNP data set can be less clear.  Classical population genetics theory is a rich field with many existing statistics and mathematical models, all created to draw biological inferences from nothing more than the patterns of observed gene and allele frequencies.  Since these frequencies can be calculated from any SNP data set, this makes them highly applicable to current research.  In this workshop, students will learn about statistics that test the neutral theory, and then apply the test to a sample SNP data set.  Throughout this process, students will learn to write their own R code for each analysis, and emphasis will be placed on algorithm design with scalability for large data sets in mind.  </p>
-
-<h3 id="goals">Goals:</h3>
-
-<ol>
-<li>Achieve a thorough understanding of each statistic or model, especially in terms of neutral theory expectations, and interpretations of deviations from the neutral expectation.  Emphasis will also be placed on knowing when a certain model may or may not be appropriate for a particular data set or scenario.</li>
-
-<li>Make the connection between the table of genotypes obtained in a VCF file (standard next-gen pipeline output) and a theoretical equation that comes from a textbook or paper.  By writing their own code each week, students will get a feel for the best ways to set up algorithms by dividing tasks into re-usable functions, parsing difficult file structures, and creating useful output.  </li>
-
-<li>Learn (or improve) R programming skills with hands-on practice.  For each exercise, we will focus on writing code from scratch (rather than using pre-existing packages), so that students will become familiar with common coding structures such as functions and loops.  These skills are applicable to all coding languages, rather than being R specific.</li>
-</ol>
-
-<h3 id="prerequisites">Prerequisites:</h3>
-
-<ul>
-<li>GEN 3000 or an equivalent undergrad genetics course from another institution.  Students must have a working knowledge of the basic concepts of genetics, including Mendelian inheritance and the molecular basis of heredity.  Prior knowledge of population genetics is NOT required.</li>
-
-<li>ALL LEVELS OF PROGRAMMING EXPERIENCE ARE WELCOME! This course is designed for both biologists who want to learn bioinformatics, and for people with programming experience who want to learn more about biology or population genomics.</li>
-
-<li>In previous semesters, some students who were completely new to R found it helpful to also go through an online tutorial of R to get more comfortable with it in the beginning.  They recommended <img src="http://nathanieldphillips.com/thepiratesguidetor/" alt="this one" /> in particular.</li>
-</ul>
-
-<h3 id="generalstructure">General Structure:</h3>
-
-<ul>
-<li>1-3 credits; Grades assigned based on participation (70%) and final project (30%)</li>
-
-<li>Meet 1 time per week, for 2.5 hours
-++  First 30-45 minutes: Review results or questions from the previous week.  Then, discuss one key test statistic/concept; go over in detail the meaning, derivation, assumptions, and expectations of the central model or statistic for the week.
-++  1.5 hours: Briefly discuss algorithm for implementing the model in a VCF file, then everyone will work on their code while interacting with the instructor and the other students for assistance and feedback*. </li>
-</ul>
-
-<p><em>The exact amount of time devoted to lecture vs. in-class programming will change from week to week, depending on what the topic is.  Additionally, some weeks the in-class exercise may not take the full amount of time, while other exercises might span into the next week of class.</em></p>
-
-<h3 id="meetingtime">Meeting Time:</h3>
-
-<p>TUESDAYS 2:00PM – 4:30PM</p>
-
-<h3 id="schedule">Schedule</h3>
-
-<h4 id="1introductiontocourseandrbasics">1: Introduction to Course and R basics</h4>
-
-<ul>
-<li>Review the syllabus and course structure.</li>
-
-<li>Brief introductions.</li>
-
-<li>R-tutorial: work through creating and manipulating variables, common data structures, performing built-in functions, and writing loops.</li>
-
-<li>Getting help: finding and reading R documentation.</li>
-
-<li><em>Exercises: Using R to perform some simple tasks, including creating a table and writing a small loop to perform some calculation on each row.</em></li>
-</ul>
-
-<h3 id="2thevariantcallformatvcf">2: The Variant Call Format (VCF)</h3>
-
-<ul>
-<li>Discuss the major concepts involved in next-gen sequencing, and review the standard raw data pipelines that are used to call SNPs and produce VCF files.</li>
-
-<li>Look in detail at the VCF format, and learn how to read this format into R and manipulate the resulting table.</li>
-
-<li><em>Exercise: Read a sample VCF file into R, and perform some simple functions to extract, summarize, and re-code the SNP data.</em></li>
-</ul>
-
-<p><strong>Single-Site Tests</strong></p>
-
-<h3 id="3hardyweinbergequilibrium">3: Hardy-Weinberg Equilibrium</h3>
-
-<ul>
-<li>Review principle of HWE; its usefulness as a diagnostic test in next-gen data; calculating observed and expected frequencies; thinking about when you do and don’t expect deviations.</li>
-
-<li>Use Fisher’s Exact test to find statistically significant deviation.</li>
-
-<li><em>Exercise: Write a script to calculate observed and expected genotype frequencies at each site in a sample VCF file, then extract sites that show too much deviation.</em></li>
-</ul>
-
-<h3 id="4wrightsfst">4: Wright's FST</h3>
-
-<ul>
-<li>Discussion of population structure, what causes it, and how FST is used to measure it.</li>
-
-<li>Equations and assumptions for FST; effects of population size on genetic drift; relationship between FST and migration; review of alternative FST estimators (and when to use them).</li>
-
-<li>Exercise: write code to calculate single site FST (using Wright’s original equation based on single site frequencies) between 2 populations in a sample VCF file; plot the distribution of FST.</li>
-</ul>
-
-<p><strong>Pairwise Tests</strong></p>
-
-<h3 id="5linkagedisequilibriumpt1">5: Linkage Disequilibrium pt. 1</h3>
-
-<ul>
-<li>Definition of LD and underlying causes.  Estimators of LD, and using haplotypes versus inferred haplotypes.</li>
-
-<li><em>Exercise: write a script to find 2-locus haplotype frequencies (in addition to single site allele frequency), and calculate the LD estimators D and r2 between every PAIR of SNPs in a very small (test case) VCF file.  Use previous functions for genotype and allele frequencies, but create a new nested loop structure that will get site pairs.  Save functions and code to run on a larger file next week.</em></li>
-</ul>
-
-<h3 id="6linkagedisequilibriumpt2">6: Linkage Disequilibrium pt. 2</h3>
-
-<ul>
-<li>Discussion of final project guidelines (in time to review papers and pick data sets over fall break)</li>
-
-<li>The interpretation and meaning of LD decay.  How to estimate the recombination rate (rho) based on the mathematical relationship between LD and recombination.</li>
-
-<li><em>Exercise: Using the code from last week, calculate r2 in a full 1000 row VCF file and plot the decay of LD with distance.  Fit a non-linear model to estimate recombination from the rate of decay.</em></li>
-</ul>
-
-<h3 id="fallbreak">Fall Break</h3>
-
-<p><strong>Whole Gene Tests</strong></p>
-
-<h3 id="7mcdonaldkreitmantest">7: McDonald-Kreitman Test</h3>
-
-<ul>
-<li>Review what positive natural selection is, and the theory underlying the MK test to find sites under selection.</li>
-
-<li>Discussion of gene annotation: what this means, and what kind of programs give you this information.</li>
-
-<li><em>Exercise: using an already annotated sample VCF file, perform the MK test to find sites under selection.</em></li>
-</ul>
-
-<h3 id="8allelefrequencyspectrum">8: Allele Frequency Spectrum</h3>
-
-<ul>
-<li>A brief introduction to coalescent theory.</li>
-
-<li>Neutral (coalescent) theory expectations of allele frequency distributions; selective and demographic forces causing deviations from neutral; interpretation of single gene vs. genome-wide spectra.</li>
-
-<li><em>Exercise: write a loop to calculate and plot the derived allele frequency spectrum for individuals in a VCF file.  Use the functions for allele frequencies from previous weeks.  Use R to simulate a neutral expectation density curve, and overlay on the observed spectra for comparison.</em>    </li>
-</ul>
-
-<h3 id="9populationmutationratetheta">9: Population Mutation Rate (Theta)</h3>
-
-<ul>
-<li>Define Theta and its estimators; discuss Watterson’s theta vs. Pi; how to calculate each; the different expectations of each, and how this relates back to the Allele Frequency Spectrum.</li>
-
-<li><em>Exercise: For a VCF file with SNPs from a single locus; calculate both estimators of theta, and determine the per bp mutation rate based on the number of mapped sites.  Both estimators will require some new functions for the calculations; the Pi estimator in particular will require a new strategy of comparing columns in a VCF rather than rows; Watterson’s theta should be pretty straightforward.</em></li>
-</ul>
-
-<p><strong> Sliding Window Tests</strong></p>
-
-<h3 id="10tajimasd">10: Tajima’s D</h3>
-
-<ul>
-<li>Testing for selection using the difference in estimates of theta; how to calculate D; different types of selection predicted by negative vs. positive D.  Discuss extensions of D (e.g. Fay and Wu’s H).</li>
-
-<li><em>Exercise: Perform a sliding window analysis on a VCF file.  Within each window, calculate D (based on difference between theta-w and pi).  Make a genome-wide plot of the D values to find regions under selection.</em></li>
-
-<li><strong>Deadline to Select Topic for Final Project!</strong></li>
-</ul>
-
-<h3 id="11multisitefstandslidingwindowtestswithmissingdata">11: Multi-site FST and Sliding Window Tests with Missing Data</h3>
-
-<ul>
-<li>Finding, installing, and using R packages from external sources, R packages for VCF data, and dealing with large files.</li>
-
-<li>Why and how do you get gaps or missing data in next-gen sequencing?  What are the implications of missing data in terms of 1) What tests you should perform on your data, and 2) what programs you should run to get the most information possible?</li>
-
-<li>Combining what we learned about  and FST in previous weeks to calculate the multi-site estimator ST.  Discuss the limitations of this statistic, and go over a paper (Cruickshank and Hahn 2014) that demonstrates these limitations and an alternative DXY statistic.</li>
-
-<li><em>Exercise: perform a sliding window test to compare the FST and DXY statistics on a sample data set.</em></li>
-</ul>
-
-<p><strong> Projects</strong></p>
-
-<h3 id="week12runningronthecluster">Week 12: Running R on the cluster</h3>
-
-<ul>
-<li>Brief overview of the linux command line environment (navigating directories, creating, deleting, splitting, concatenating, and moving files).  </li>
-
-<li>Cluster basics: logging in, transferring files, using interactive nodes and submitting job scripts.</li>
-
-<li>Running R from the command line; writing output for data and figures to files; making code more flexible with command line arguments. Installing packages locally.</li>
-
-<li><em>In-class time to work on projects and get feedback as needed</em></li>
-</ul>
-
-<h3 id="lastdayofclassprojectpresentations">Last Day of Class: Project Presentations</h3>
-
-<ul>
-<li>10 minute presentations by each person on the results of their project.</li>
-</ul>
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Gen8900-compGen</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/1-col-portfolio.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+  <!-- Banner -->
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+	<img src="img/courseLogo4_cmdPrompt.gif" alt="" width="1000" height="172" >
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Course Summary -->
+  <div class="container">
+    <div class="row">
+      <div class="col-md-2">
+      </div>
+    <div class="col-md-8">
+      <h3>Course Summary and Objectives:</h3>
+      <p>High-throughput sequencing technology has made it possible to obtain large scale genetic data sets for almost any organism, creating a need for computational tools and skill sets to process these data.&nbsp; While the bioinformatics workflows for processing raw data into SNPs are typically well delineated, the path for analyzing and interpreting the resulting SNP data set can be less clear. &nbsp;In this workshop, students learn about classical population genetics statistics that test the neutral theory of evolution, and then get hands-on experience writing their own R code to perform each analysis on a realistic sample SNP data set. &nbsp;Emphasis is placed on programming fundamentals and&nbsp;algorithm design: skills that extend beyond the specific calculations learned in class. &nbsp;At the end of the semester, each student completes an independent project that consists of running an analysis on their own, often using their own data, and presenting their findings to the class.</p>
+    </div>
+    </div>
+  </div>
+
+  <hr>
+  
+  <!-- Course Modules -->
+  <div class="container">
+    <!-- Modules 1-3 -->
+    <div class="row">
+      <div class="col-md-4">
+	<center><img src="img/Week1_banner.png" alt="" width="200" height="46"> </center>
+	  <ul style="disc">
+	    <li>Review the syllabus and course structure.</li>
+	    <li>Brief introductions.</li>
+	    <li>R-tutorial: work through creating and manipulating variables, common data structures, performing built-in functions, and writing loops.</li>
+	    <li>Getting help: finding and reading R documentation.</li>
+	  </ul>
+      </div>
+      <div class="col-md-4">
+	<center><img src="img/Week2_banner.png" alt="" width="200" height="44"></center>
+	<ul style="disc">
+	  <li>Discuss the major concepts involved in next-gen sequencing, and review the standard raw data pipelines that are used to call SNPs and produce VCF files.</li>
+	  <li>Look in detail at the VCF format, and learn how to read this format into R and manipulate the resulting table.</li>
+	  <li><em>Exercise: Read a sample VCF file into R, and perform some simple functions to extract, summarize, and re-code the SNP data.</em></li>
+	</ul>
+      </div>
+      <div class="col-md-4">
+	<center><img src="img/Week3_banner.png" alt="" width="200" height="47"></center>
+	<ul style="disc">
+	  <li>Review principle of HWE; its usefulness as a diagnostic test in next-gen data; calculating observed and expected frequencies; thinking about when you do and don’t expect deviations.</li>
+	  <li>Use Fisher’s Exact test to find statistically significant deviation.</li>
+	  <li><em>Exercise: Write a script to calculate observed and expected genotype frequencies at each site in a sample VCF file, then extract sites that show too much deviation.</em></li>
+	</ul>
+      </div>
+    </div>
+    <!--Modules 4-6 -->
+    <div class="row">
+      <div class="col-md-4">
+	<center><img src="img/Week4_banner.png" alt="" width="200" height="45"></center>
+	<ul style="disc">
+	  <li>Discussion of population structure, what causes it, and how F<sub>ST</sub> is used to measure it.</li>
+	  <li>Equations and assumptions for F<sub>ST</sub>; effects of population size on genetic drift; relationship between F<sub>ST</sub> and migration; review of alternative F<sub>ST</sub> estimators (and when to use them).</li>
+	  <li><em>Exercise: write code to calculate single site F<sub>ST</sub> (using Wright’s original equation based on single site frequencies) between 2 populations in a sample VCF file; plot the distribution of F<sub>ST</sub>.</em></li>
+	</ul>
+      </div>
+      <div class="col-md-4">
+	<center><img src="img/Week5_banner.png" alt="" width="200" height="49"></center>
+	<ul style="disc">
+	  <li>Definition of Linkage Disequilibrium and underlying causes.</li>
+	  <li>Estimators of LD, and using haplotypes versus inferred haplotypes.</li>
+	  <li><em>Exercise: write a script to find 2-locus haplotype frequencies (in addition to single site allele frequency), and calculate the LD estimators D and r2 between every PAIR of SNPs in a very small (test case) VCF file.  Use previous functions for genotype and allele frequencies, but create a new nested loop structure that will get site pairs.  Save functions and code to run on a larger file next week.</em></li>
+	</ul>
+      </div>
+      <div class="col-md-4">
+	<center><img src="img/Week6_banner.png" alt="" width="200" height="49"></center>
+	<ul style="disc">
+	  <li>The interpretation and meaning of LD decay.  How to estimate the recombination rate (rho) based on the mathematical relationship between LD and recombination.</li>
+	  <li><em>Exercise: Using the code from last week, calculate r2 in a full 1000 row VCF file and plot the decay of LD with distance.  Fit a non-linear model to estimate recombination from the rate of decay.</em></li>
+	</ul>
+      </div>
+    </div>
+    <!-- Modules 7-9 -->
+    <div class="row">
+      <div class="col-md-4">
+	<center><img src="img/Week7_banner.png" alt="" width="200" height="49"></center>
+	<ul style="disc">
+	  <li>Review what positive natural selection is, and the theory underlying the MK test to find sites under selection.</li>
+	  <li>Discussion of gene annotation: what this means, and what kind of programs give you this information.</li>
+	  <li><em>Exercise: using an already annotated sample VCF file, perform the MK test to find sites under selection.</em></li>
+	</ul>
+      </div>
+      <div class="col-md-4">
+	<center><img src="img/Week8_banner/png" alt="" width="200" height="49"></center>
+	<ul style="disc">
+	  <li>A brief introduction to coalescent theory.</li>
+	  <li>Neutral (coalescent) theory expectations of allele frequency distributions; selective and demographic forces causing deviations from neutral; interpretation of single gene vs. genome-wide spectra.</li>
+	  <li><em>Exercise: write a loop to calculate and plot the derived allele frequency spectrum for individuals in a VCF file.  Use the functions for allele frequencies from previous weeks.  Use R to simulate a neutral expectation density curve, and overlay on the observed spectra for comparison.</em></li>
+	</ul>
+      </div>
+      <div class="col-md-4">
+	<center><img src="img/Week9_banner.png" alt="" width="200" height="49"></center>
+	<ul style="disc">
+	  <li>Define Theta and its estimators; discuss Watterson’s theta vs. Pi; how to calculate each; the different expectations of each, and how this relates back to the Allele Frequency Spectrum.</li>
+	  <li>Exercise: For a VCF file with SNPs from a single locus; calculate both estimators of theta, and determine the per bp mutation rate based on the number of mapped sites.</li>
+	  <li>Both estimators will require some new functions for the calculations; the Pi estimator in particular will require a new strategy of comparing columns in a VCF rather than rows; Watterson’s theta should be pretty straightforward.</li>
+	</ul>
+      </div>
+    </div>
+    <!-- Modules 10-12 -->
+    <div class="row">
+      <div class="col-md-4">
+	<center><img src="img/Week10_banner.png" alt="" width="200" height="49"></center>
+	<ul style="disc">
+	  <li>Testing for selection using the difference in estimates of theta; how to calculate Tajima's D; different types of selection predicted by negative vs. positive D.  Discuss extensions of D (e.g. Fay and Wu’s H).</li>
+	  <li><em>Exercise: Perform a sliding window analysis on a VCF file.  Within each window, calculate D (based on difference between theta-w and pi).  Make a genome-wide plot of the D values to find regions under selection.</em></li>
+	</ul>
+      </div>
+      <div class="col-md-4">
+	<center><img src="img/Week11_banner.png" alt="" width="200" height="49"></center>
+	<ul style="disc">
+	  <li>R packages for VCF data, and dealing with large files.</li>
+	  <li>Why and how do you get gaps or missing data in next-gen sequencing?  What are the implications of missing data in terms of 1) What tests you should perform on your data, and 2) what programs you should run to get the most information possible?</li>
+	  <li>Combining what we learned about Pi and F<sub>ST</sub> in previous weeks to calculate Nei's multi-site estimator.  Discuss the limitations of this statistic, and go over a paper (Cruickshank and Hahn 2014) that demonstrates these limitations and looks at the alternative D<sub>XY</sub> statistic.</li>
+	  <li><em>Exercise: perform a sliding window test to compare the F<sub>ST</sub> and D<sub>XY</sub> statistics on a sample data set.</em></li>
+	</ul>
+      </div>
+      <div class="col-md-4">
+	<center><img src="img/Week12_banner.png" alt="" width="200" height="49"></center>
+	<ul style="disc">
+	  <li>Brief overview of the linux command line environment (navigating directories, creating, deleting, splitting, concatenating, and moving files).</li>
+	  <li>Cluster basics: logging in, transferring files, using interactive nodes and submitting job scripts.</li>
+	  <li>Running R in the cluster environment; installing packages, setting up scripts to use command line arguments.</li>
+	  <li><em>In-class time to work on final projects and get help as needed.</em></li>
+	</ul>
+	
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- External Links -->
+  <div class="container">
+    <div class="row">
+      <div class="col-md-3">
+      </div>
+      <div class="col-md-5">
+	<center><h3>Useful External Links:</h3></center>
+	  <a href="https://www.r-project.org/">R-project website</a>
+	  <a href="https://www.rstudio.com/">R-studio</a>
+	  <a href="http://nathanieldphillips.com/thepiratesguidetor/">Pirates Guide to R</a>
+      </div>
+    </div>
+  </div>
+  
+  </body>
+</html>
+
+  
