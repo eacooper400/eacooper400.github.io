@@ -52,9 +52,7 @@
   <!-- Course Summary -->
   <div class="container">
     <div class="row">
-      <div class="col-md-2">
-      </div>
-    <div class="col-md-8">
+      <div class="col-md-12">
       <h3>Course Summary and Objectives:</h3>
       <p>High-throughput sequencing technology has made it possible to obtain large scale genetic data sets for almost any organism, creating a need for computational tools and skill sets to process these data.&nbsp; While the bioinformatics workflows for processing raw data into SNPs are typically well delineated, the path for analyzing and interpreting the resulting SNP data set can be less clear. &nbsp;In this workshop, students learn about classical population genetics statistics that test the neutral theory of evolution, and then get hands-on experience writing their own R code to perform each analysis on a realistic sample SNP data set. &nbsp;Emphasis is placed on programming fundamentals and&nbsp;algorithm design: skills that extend beyond the specific calculations learned in class. &nbsp;At the end of the semester, each student completes an independent project that consists of running an analysis on their own, often using their own data, and presenting their findings to the class.</p>
     </div>
@@ -89,7 +87,7 @@
 	<ul style="disc">
 	  <li>Review principle of HWE; its usefulness as a diagnostic test in next-gen data; calculating observed and expected frequencies; thinking about when you do and don’t expect deviations.</li>
 	  <li>Use Fisher’s Exact test to find statistically significant deviation.</li>
-	  <li><em>Exercise: Write a script to calculate observed and expected genotype frequencies at each site in a sample VCF file, then extract sites that show too much deviation.</em></li>
+	  <li><em>Exercise: Calculate observed and expected genotype frequencies at each site in a sample VCF file, then extract sites that show too much deviation.</em></li>
 	</ul>
       </div>
     </div>
@@ -100,7 +98,7 @@
 	<ul style="disc">
 	  <li>Discussion of population structure, what causes it, and how F<sub>ST</sub> is used to measure it.</li>
 	  <li>Equations and assumptions for F<sub>ST</sub>; effects of population size on genetic drift; relationship between F<sub>ST</sub> and migration; review of alternative F<sub>ST</sub> estimators (and when to use them).</li>
-	  <li><em>Exercise: write code to calculate single site F<sub>ST</sub> (using Wright’s original equation based on single site frequencies) between 2 populations in a sample VCF file; plot the distribution of F<sub>ST</sub>.</em></li>
+	  <li><em>Exercise: Calculate single site F<sub>ST</sub> between 2 populations in a sample VCF file and plot the distribution of F<sub>ST</sub>.</em></li>
 	</ul>
       </div>
       <div class="col-md-4">
@@ -108,14 +106,14 @@
 	<ul style="disc">
 	  <li>Definition of Linkage Disequilibrium and underlying causes.</li>
 	  <li>Estimators of LD, and using haplotypes versus inferred haplotypes.</li>
-	  <li><em>Exercise: write a script to find 2-locus haplotype frequencies (in addition to single site allele frequency), and calculate the LD estimators D and r2 between every PAIR of SNPs in a very small (test case) VCF file.  Use previous functions for genotype and allele frequencies, but create a new nested loop structure that will get site pairs.  Save functions and code to run on a larger file next week.</em></li>
+	  <li><em>Exercise: Calculate 2-locus haplotype frequencies (pAB), and use them to calculate the LD estimators D and r2 between a PAIR of sites.  Save functions and code to run on a larger file next week.</em></li>
 	</ul>
       </div>
       <div class="col-md-4">
 	<center><img src="img/Week6_banner.png" alt=""></center>
 	<ul style="disc">
 	  <li>The interpretation and meaning of LD decay.  How to estimate the recombination rate (rho) based on the mathematical relationship between LD and recombination.</li>
-	  <li><em>Exercise: Using the code from last week, calculate r2 in a full 1000 row VCF file and plot the decay of LD with distance.  Fit a non-linear model to estimate recombination from the rate of decay.</em></li>
+	  <li><em>Exercise: Using the code from last week, calculate r2 for all pairs of sites in a VCF file and plot the decay of LD with distance.  Fit a non-linear model to estimate recombination from the rate of decay.</em></li>
 	</ul>
       </div>
     </div>
@@ -126,7 +124,7 @@
 	<ul style="disc">
 	  <li>Review what positive natural selection is, and the theory underlying the MK test to find sites under selection.</li>
 	  <li>Discussion of gene annotation: what this means, and what kind of programs give you this information.</li>
-	  <li><em>Exercise: using an already annotated sample VCF file, perform the MK test to find sites under selection.</em></li>
+	  <li><em>Exercise: Using an already annotated sample VCF file, perform the MK test to find sites under selection.</em></li>
 	</ul>
       </div>
       <div class="col-md-4">
@@ -134,15 +132,14 @@
 	<ul style="disc">
 	  <li>A brief introduction to coalescent theory.</li>
 	  <li>Neutral (coalescent) theory expectations of allele frequency distributions; selective and demographic forces causing deviations from neutral; interpretation of single gene vs. genome-wide spectra.</li>
-	  <li><em>Exercise: write a loop to calculate and plot the derived allele frequency spectrum for individuals in a VCF file.  Use the functions for allele frequencies from previous weeks.  Use R to simulate a neutral expectation density curve, and overlay on the observed spectra for comparison.</em></li>
+	  <li><em>Exercise: Calculate and plot the derived allele frequency spectrum.  Use R to simulate a neutral expectation density curve, and overlay on the observed spectra for comparison.</em></li>
 	</ul>
       </div>
       <div class="col-md-4">
 	<center><img src="img/Week9_banner.png" alt=""></center>
 	<ul style="disc">
 	  <li>Define Theta and its estimators; discuss Watterson’s theta vs. Pi; how to calculate each; the different expectations of each, and how this relates back to the Allele Frequency Spectrum.</li>
-	  <li>Exercise: For a VCF file with SNPs from a single locus; calculate both estimators of theta, and determine the per bp mutation rate based on the number of mapped sites.</li>
-	  <li>Both estimators will require some new functions for the calculations; the Pi estimator in particular will require a new strategy of comparing columns in a VCF rather than rows; Watterson’s theta should be pretty straightforward.</li>
+	  <li><em>Exercise: Calculate both estimators of theta, and determine the per bp mutation rate based on the number of mapped sites.</em></li>
 	</ul>
       </div>
     </div>
@@ -152,7 +149,7 @@
 	<center><img src="img/Week10_banner.png" alt=""></center>
 	<ul style="disc">
 	  <li>Testing for selection using the difference in estimates of theta; how to calculate Tajima's D; different types of selection predicted by negative vs. positive D.  Discuss extensions of D (e.g. Fay and Wu’s H).</li>
-	  <li><em>Exercise: Perform a sliding window analysis on a VCF file.  Within each window, calculate D (based on difference between theta-w and pi).  Make a genome-wide plot of the D values to find regions under selection.</em></li>
+	  <li><em>Exercise: Perform a sliding window analysis on a VCF file.  Within each window, calculate Tajima's D and make a genome-wide plot of the D values to find regions under selection.</em></li>
 	</ul>
       </div>
       <div class="col-md-4">
@@ -161,7 +158,7 @@
 	  <li>R packages for VCF data, and dealing with large files.</li>
 	  <li>Why and how do you get gaps or missing data in next-gen sequencing?  What are the implications of missing data in terms of 1) What tests you should perform on your data, and 2) what programs you should run to get the most information possible?</li>
 	  <li>Combining what we learned about Pi and F<sub>ST</sub> in previous weeks to calculate Nei's multi-site estimator.  Discuss the limitations of this statistic, and go over a paper (Cruickshank and Hahn 2014) that demonstrates these limitations and looks at the alternative D<sub>XY</sub> statistic.</li>
-	  <li><em>Exercise: perform a sliding window test to compare the F<sub>ST</sub> and D<sub>XY</sub> statistics on a sample data set.</em></li>
+	  <li><em>Exercise: Perform a sliding window test to compare the F<sub>ST</sub> and D<sub>XY</sub> statistics on a sample data set.</em></li>
 	</ul>
       </div>
       <div class="col-md-4">
