@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Working with VCF Files</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/css/1-col-portfolio.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+  <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">R-Tutorial</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="/compGen8900.html">Gen-8900
+                <span class="sr-only">(current)</span>
+              </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/r-intro.html">R-Tutorial
+	        <span class="sr-only">(current)</span>
+	      </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/fst.html">Fst-Exercises
+		<span class="sr-only">(current)</span>
+	      </a>
+	      </li>
+	  </ul>
+	 </div>
+	</div>
+	</nav>
+
+	<!--Page Content-- >
+	<section id="vcf-exercises">
+	<div class="container">
+	  <div class="row">
+	    <div-class="col-md-12">
+	      <h1>Working with SNP Data in VCF Format</h1>
+<h2>Reading in a VCF file</h2>
+<p>Before we can do anything with our data file, we have to get it into R. Since R has several built-in functions for reading different types of files, this isn't too hard, but there are a couple of aspects about VCF files that will require a special function.</p>
+<p>To start with, I like to set my working environment to be within the folder where I keep the input data and other files for the course. This saves me the trouble of having to constantly type out file paths to find what I need:</p>
+<pre><code>&gt; setwd("~/Desktop/Teaching/CompGenWS-GEN8900/")
+</code></pre>
+<p>The <code>~</code> symbol works as a place holder for <code>/Users/lizcooper</code> (my home directory). This symbol should work on any Mac or Linux machine, but on Windows you may need to type the full path to your home directory.</p>
+<p>Once your working directory is set, let's first try to read in the file just using R's built-in <code>read.table</code> function, since we know now that VCF files are just tab-delimited text files:</p>
+<pre><code>&gt; my.data=read.table("SampleData/sampleData_wk2.vcf", header=TRUE, stringsAsFactors=FALSE)
+</code></pre>
+<p>Here, we give the command the name of the file we want to read in, we tell it that our file does have a HEADER row, and we say that we <strong>don't</strong> want strings to be treated as factors. This didn't return an error, but let's look at our file and see if it was read correctly:</p>
+<pre><code>&gt; head(my.data, n=5)
+X1 X32306701 S1_32306701 G A X34 PASS . GT.AD.DP.GQ.PL X1.1.4.14.18.14.22.14.0  X0.1.9.3.12.13.23.13.0
+1  1  34699267 S1_34699267 A G  20 PASS . GT:AD:DP:GQ:PL  1/1:0,17:17:12:15,12,0             ./.:.:.:.:.
+2  1  80468344 S1_80468344 G A  26 PASS . GT:AD:DP:GQ:PL    0/0:18,4:22:7:7,20,0 0/1:11,10:21:11:11,12,0
+3  2  15392497 S2_15392497 T C  34 PASS . GT:AD:DP:GQ:PL  0/0:22,2:24:19:19,27,0  0/0:23,4:27:10:10,10,0
+4  2  15528730 S2_15528730 G C  29 PASS . GT:AD:DP:GQ:PL    0/0:15,2:17:1:23,1,0  0/0:13,1:14:18:39,18,0
+5  3  41136420 S3_41136420 A G  27 PASS . GT:AD:DP:GQ:PL     1/1:2,24:26:1:1,9,0  0/1:12,7:19:10:10,12,0
+</code></pre>
+<p><code>head(...)</code> is a command that lets you look at just the first few lines (in this case 5) of a file or data object (this is another command that is the same as in bash scripting). We can see that the data <em>mostly</em> look okay, but something weird is going on with our first row: instead of reading in the real column headers (that start with #CHROM), R has skipped that line because it sees <code>#</code> as the "comment" character, and it has mistakenly made the first row of the data into a header.</p>
+<p>To see if we can get around this, we can try specifying that <code>##</code> is the comment character instead of <code>#</code>:</p>
+<pre><code>&gt; my.data=read.table("SampleData/sampleData_wk2.vcf", header=TRUE, stringsAsFactors=FALSE, comment.char="##")
+<span style="color: #ff0000;">Error in read.table("SampleData/sampleData_wk2.vcf", header = TRUE, stringsAsFactors = FALSE,  : 
+invalid 'comment.char' argument
+</span></code></pre>
+<p>Now we actually get an ERROR message saying that we tried an invalid comment character. This is because it turns out R can only take values of length=1 for this argument. So, it's time to write our own function to get around this issue and get the VCF read in correctly.</p>
+<p>For our <code>read.vcf</code> function, we need to do the following things:</p>
+<ol>
+<li>Define a special search term that can match lines starting with "##" and followed by anything.</li>
+<li>Read in ALL of the lines from a file without skipping any, and then manually remove lines that match our "##" search term.</li>
+<li>Remove the single "#" from the header line so that R won't try to skip it later.</li>
+<li>Send our cleaned up lines back into the <code>read.table</code> function and let R proceed as usual.</li>
+</ol>
+<p>Here is the new function:</p>
+<pre><code>read.vcf = function(file, special.char="##", ...) {
+    my.search.term=paste0(special.char, ".*")
+    all.lines=readLines(file)
+    clean.lines=gsub(my.search.term, "",  all.lines)
+    clean.lines=gsub("#CHROM", "CHROM", clean.lines)
+    read.table(..., text=paste(clean.lines, collapse="\n"))
+    }
+</code></pre>
+<p>The <code>paste</code> function that appears in two of the lines is doing exactly what it sounds like: it is "pasting" together any variables that we list into one string. In the first call, we use <code>paste0</code> to paste the <code>##</code> special character term and the <code>.*</code> pattern into a single regular expression: "##.*". This expression will find and match all lines starting with "##" followed by anything; we use <code>gsub</code> in the function to find and replace these lines with nothing (""), thereby deleting them. The second instance of <code>paste</code> is using the newline character "\n" as the separator for all of our "clean" lines; this is essentially putting the lines back into a text file, and then this is sent to <code>read.table</code></p>
+<p>Now, let's use our new funciton to read in the VCF file one final time:</p>
+<pre><code>&gt; my.data=read.vcf("SampleData/sampleData_wk2.vcf", header=TRUE, stringsAsFactors=FALSE)
+&gt; head(my.data, n=5)
+CHROM      POS          ID REF ALT QUAL FILTER INFO         FORMAT                 X16096                  X18238
+1     1 32306701 S1_32306701   G   A   34   PASS    . GT:AD:DP:GQ:PL 1/1:4,14:18:14:22,14,0   0/1:9,3:12:13:23,13,0
+2     1 34699267 S1_34699267   A   G   20   PASS    . GT:AD:DP:GQ:PL 1/1:0,17:17:12:15,12,0             ./.:.:.:.:.
+3     1 80468344 S1_80468344   G   A   26   PASS    . GT:AD:DP:GQ:PL   0/0:18,4:22:7:7,20,0 0/1:11,10:21:11:11,12,0
+4     2 15392497 S2_15392497   T   C   34   PASS    . GT:AD:DP:GQ:PL 0/0:22,2:24:19:19,27,0  0/0:23,4:27:10:10,10,0
+5     2 15528730 S2_15528730   G   C   29   PASS    . GT:AD:DP:GQ:PL   0/0:15,2:17:1:23,1,0  0/0:13,1:14:18:39,18,0
+</code></pre>
+<p>Success!!</p>
+<h2 id="grepandgsubexpressionswithvcffiles">Grep and Gsub Expressions with VCF files</h2>
+<p>Below is a table to help you find the best pattern matching expressions to use in your code today:</p>
+<table style="border-color: black;" border="black">
+<tbody>
+<tr>
+<td style="width: 52px;">Pattern</td>
+<td style="width: 496px;">Description</td>
+</tr>
+<tr>
+<td style="width: 52px;">"0/1"</td>
+<td style="width: 496px;">Match any occurence of the pattern "0/1" in any word within a vector</td>
+</tr>
+<tr>
+<td style="width: 52px;">"^0/1"</td>
+<td style="width: 496px;">Match only occurences of the pattern "0/1" at the beginning of a word</td>
+</tr>
+<tr>
+<td style="width: 52px;">"^(0|1)"</td>
+<td style="width: 496px;">Match any occurence of "0" OR "1" at the beginning of a word</td>
+</tr>
+<tr>
+<td style="width: 52px;">"0/1.*"</td>
+<td style="width: 496px;">Match any occurence of of "0/1" followed by ANYTHING</td>
+</tr>
+<tr>
+<td style="width: 52px;">"\\./\\."</td>
+<td style="width: 496px;">Matches the "./." pattern of missing data (by escaping the "." character</td>
+</tr>
+</tbody>
+</table>
+<p>Note one <em>slight</em> difference in the behavior of <code>grep</code> and <code>gsub</code>: If I use <code>grep("0/1", my.data[1,])</code> on my input vcf file, it will behave the same as <code>grep("0/1.*", my.data[1,])</code> because they are both finding strings with any instance of the pattern "0/1" and returning the index of whenever that pattern occurred:</p>
+<pre><code>&gt; grep("0/1", my.data[1,])
+[1] 11 14
+&gt; grep("0/1.*", my.data[1,])
+[1] 11 14
+</code></pre>
+<p>But if I do the same thing with <code>gsub</code> the results will differ; in the first case <code>gsub</code> will ONLY replace the "0/1" pattern, in the second case it replaces the whole string where that pattern was found:</p>
+<pre><code>&gt; gsub("0/1", "A", my.data[1,])
+[1] "1"                      "32306701"               "S1_32306701"            "G"                     
+[5] "A"                      "34"                     "PASS"                   "."                     
+[9] "GT:AD:DP:GQ:PL"         "1/1:4,14:18:14:22,14,0" "A:9,3:12:13:23,13,0"    "0/0:12,1:13:1:1,6,0"   
+[13] "0/0:21,1:22:1:1,20,0"   "A:19,5:24:1:18,1,0"     "0/0:16,3:19:10:10,15,0"
+
+&gt; gsub("0/1.*", "A", my.data[1,])
+[1] "1"                      "32306701"               "S1_32306701"            "G"                     
+[5] "A"                      "34"                     "PASS"                   "."                     
+[9] "GT:AD:DP:GQ:PL"         "1/1:4,14:18:14:22,14,0" "A"                      "0/0:12,1:13:1:1,6,0"   
+[13] "0/0:21,1:22:1:1,20,0"   "A"                      "0/0:16,3:19:10:10,15,0"
+</code></pre>
+<h2 id="additionaloptionalrcommandsfortodaysexercises">Additional (Optional) R commands for today's exercises:</h2>
+<p>You should be able to complete all of the exercises for today using the indexing, <code>grep</code>, <code>gsub</code>, and <code>length</code> commands that we learned about last week. But, below are a few other commands that you might find helpful, if you prefer a different approach to the problem:</p>
+<h3 id="splittingasinglestringworkintoavectorwithstrsplit">Splitting a Single String/Word into a Vector with strsplit()</h3>
+<p>Since the format for each sample string is fairly convoluted in a VCF file (e.g. "1/1:4,14:18:14:22,14,0"), you might be interested in separating out the different pieces of information in this string. You can do this with a command called <code>strsplit</code>, which will separate any word based on a given "delimiter":</p>
+<pre><code>&gt; test=my.data[1,10]
+&gt; test
+[1] "1/1:4,14:18:14:22,14,0"
+&gt; strsplit(test, split=":")
+[[1]]
+[1] "1/1"     "4,14"    "18"      "14"      "22,14,0"
+</code></pre>
+<p><code>strsplit</code> returns a <strong>list</strong> object; in the above example the <em>list</em> is of length 1, and the first item in the list is a vector of length 5. To get the first list item, I would use the `[[...]]` notation like this:</p>
+<pre><code>&gt; x=strsplit(test, split=":")
+&gt; x
+[[1]]
+[1] "1/1"     "4,14"    "18"      "14"      "22,14,0"
+
+&gt; x[[1]]
+[1] "1/1"     "4,14"    "18"      "14"      "22,14,0"
+</code></pre>
+<p>To get the first <em>vector</em> item from the first <em>list</em> item, I would index it like this:</p>
+<pre><code>&gt; x[[1]][1]
+[1] "1/1"
+</code></pre>
+<p>You can run <code>strsplit</code> on a vector instead of a single string (in this case I'll use the first 5 genotypes from column 10), and it will return a list like this:</p>
+<pre>&gt; x=strsplit(my.data[1:5,10], split=":") <br />&gt; x <br />[[1]] <br />[1] "1/1" "4,14" "18" "14" "22,14,0"</pre>
+<pre><code>[[2]]
+[1] "1/1"     "0,17"    "17"      "12"      "15,12,0"
+
+[[3]]
+[1] "0/0"    "18,4"   "22"     "7"      "7,20,0"
+
+[[4]]
+[1] "0/0"     "22,2"    "24"      "19"      "19,27,0"
+
+[[5]]
+[1] "0/0"    "15,2"   "17"     "1"      "23,1,0"
+</code></pre>
+<p>So, to get the genotypes, I would want the first vector item from <strong>each</strong> element in this list, which means I would need to write a loop like this:</p>
+<pre><code>&gt; for (i in 1:length(x)) {
++ print(x[[i]][1])
++ }
+[1] "1/1"
+[1] "1/1"
+[1] "0/0"
+[1] "0/0"
+[1] "0/0"
+</code></pre>
+<p>OR, there is also an advanced R trick using an <code>apply</code> function that will actually do the same things as the loop, except all in one line. Don't worry if you don't understand or don't want to use the <code>apply</code> functions at this point, I am just showing you so that you know:</p>
+<pre><code>&gt; sapply(x, `[[`, 1)
+[1] "1/1" "1/1" "0/0" "0/0" "0/0"
+</code></pre>
+<p>One final thing: if you do decide to use <code>strsplit</code>, you no longer need to use <code>grep</code> to match the "0/1" or other genotype patterns; you can now match them exactly like this:</p>
+<pre><code>&gt; y = sapply(x, `[[`, 1)
+&gt; y
+[1] "1/1" "1/1" "0/0" "0/0" "0/0"
+&gt; which(y == "0/0")
+[1] 3 4 5
+</code></pre>
+<h3 id="gettingcountswithtable">Getting Counts with table()</h3>
+<p>Since the exercises today are about counting the different genotypes, you may be interested in a function called <code>table</code> which can get counts automatically:</p>
+<pre><code>&gt; table(y)
+y
+0/0 1/1 
+3   2
+</code></pre>
+<p>The results from <code>table</code> are a <em>named vector,</em> which can be indexed the same way as a normal vector, OR can be indexed by name as well:</p>
+<pre><code>&gt; z = table(y)
+&gt; z[1]
+0/0 
+3 
+&gt; z["0/0"]
+0/0 
+3
+</code></pre>
+<p>By default, <code>table</code> will only return counts for variables that it finds, and it will NOT return 0 counts. To force it to count all of the possible genotypes, you can do this:</p>
+<pre><code>&gt; table(factor(y, levels=c("0/0", "0/1", "1/1", "./.")))
+
+0/0 0/1 1/1 ./. 
+3   0   2   0 
+</code></pre>
+<h1 id="exercises">Exercises</h1>
+<h3 id="getthecountsforeachgenotypeaaaaaaandnnateachposition">1.) Get the COUNTS for each Genotype (AA, Aa, aa, and NN) at each position.</h3>
+<p><span style="color: #0000ff;">AA</span> = Homozygous Reference,&nbsp;<span style="color: #0000ff;">Aa</span> = Heterozygous,&nbsp;<span style="color: #0000ff;">aa</span> = Homozygous Alternate,&nbsp;<span style="color: #0000ff;">NN</span> = Missing</p>
+<p>The goal is to create a table that looks like this:</p>
+<table border="black">
+<tbody>
+<tr>
+<td>AA</td>
+<td>Aa</td>
+<td>aa</td>
+<td>NN</td>
+</tr>
+<tr>
+<td>##</td>
+<td>##</td>
+<td>##</td>
+<td>##</td>
+</tr>
+<tr>
+<td>##</td>
+<td>##</td>
+<td>##</td>
+<td>##</td>
+</tr>
+<tr>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+</tbody>
+</table>
+<p>where you will have 1 row for each position in the input VCF file. To get you started, here is some Pseudocode for how I would break down the problem:</p>
+<pre><code>create an empty table to hold the results
+
+for (i in 1:nrow(my.data)) {
+
+       get all of the Sample Strings from the row (i.e. without the CHROM,POS, ID, columns etc.)
+       find the instances of each genotype code in the samples
+       count the instances and save the results in the table
+       }
+</code></pre>
+<p>Hint: you may want to start by extracting just the first row of the file to test out your commands before trying to run the whole loop:</p>
+<pre><code>&gt; test.row = as.vector(my.data[1,], mode="character")
+</code></pre>
+<h3 id="getthepercentheterozygosityforeachindividualinthefile">2.) Get the Percent Heterozygosity for EACH INDIVIDUAL in the file.</h3>
+<p>The data for this exercise actually come from a <a href="http://kmbiology.weebly.com/mendel-and-genetics---notes.html">cross of 2 inbred plants (like Mendel's experiments)</a>, where 2 individuals are the inbred parents (and should be completely homozygous at all sites), 1 individual comes from the F1 generation (and should be completely heterozygous), and the remaining 3 individuals come from the F2 generation (partially heterozygous).</p>
+<p>To figure out which individual is which, calculate the overall heterozygosity across all sites for each sample, and see if you can tell what generation each belongs to.</p>
+<h3 id="converttoanewfileformat">3.) Convert to a new file format.</h3>
+<p>Often, to run a particular analysis in an outside program, you will need to convert from the VCF format to whatever format that program wants. In this exercise, I want you to convert this file to a table of the actual diploid nucleotide calls for each sample, instead of the binary 0/1 calls given in VCF.</p>
+<p>For example, in row 1, where the REF alleles is "G," and the ALT allele is "A," any samples with "0/0" should be changed to "GG," "0/1" should become "GA," and "1/1" should be "AA." You can change missing data to "NN."</p>
+<p>So, your final table will look like this:</p>
+<table style="margin-left: auto; margin-right: auto;" border="black">
+<tbody>
+<tr>
+<td>Sample1</td>
+<td>Sample2</td>
+<td>Sample3</td>
+<td>Sample4</td>
+<td>Sample5</td>
+<td>Sample6</td>
+</tr>
+<tr>
+<td>AA</td>
+<td>GA</td>
+<td>GG</td>
+<td>GG</td>
+<td>GA</td>
+<td>GG</td>
+</tr>
+<tr>
+<td>....</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+</tbody>
+</table>
+<p>with one row per position.</p>
+<p>Hint: to create the diploid genotype strings from the REF and ALT columns, you can use <code>paste0</code>:</p>
+<pre><code>&gt; homREF=paste0(my.data$REF, my.data$REF)
+&gt; homREF[1:5]
+[1] "GG" "AA" "GG" "TT" "GG"
+</code></pre>
+
+<a href="/gen8900/r-code/2_VCF_solutions.R" download="2_VCF_solutions.R">R code solution for VCF Exercises</a>
+
+	  </div>
+	</div>
+</div>
+</section>
+</body>
+</html>
