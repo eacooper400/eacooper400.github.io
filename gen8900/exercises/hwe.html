@@ -1,5 +1,61 @@
-<h2 id="1calculatetheexpectedgenotypecountsateachsnp">1. Calculate the Expected Genotype Counts at Each SNP</h2>
-<h3 id="partagetatableofobservedgenotypecounts">Part A: Get a Table of Observed Genotype Counts</h3>
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Hardy-Weinberg Equilibrium</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/css/1-col-portfolio.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+  <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">HWE-Exercises</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="/compGen8900.html">Gen-8900
+                <span class="sr-only">(current)</span>
+              </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/vcf.html">VCF-Exercises
+	        <span class="sr-only">(current)</span>
+	      </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/fst.html">Fst-Exercises
+		<span class="sr-only">(current)</span>
+	      </a>
+	      </li>
+	  </ul>
+	 </div>
+	</div>
+	</nav>
+
+	<!--Page Content -->
+	<section id="hwe-exercises">
+	<div class="container">
+	  <div class="row">
+	  <div-class="col-md-12">
+	    <h1>Hardy-Weinberg Equilibrium and Expected Frequencies</h1>
+<h2>Calculate the Expected Genotype Counts at Each SNP</h2>
+<h3>Part A: Get a Table of Observed Genotype Counts</h3>
 <p>The first step in this exercise is exactly the same as the exercise last week: get a table of <em>observed</em> genotype counts at each site (row) in the VCF file.</p>
 <p>Remember the key steps in this process are:</p>
 <ul>
@@ -275,3 +331,28 @@ my.results$rdDepth[i]=mean(as.numeric(d), na.rm=TRUE)
 </li>
 </ul>
 <p>Which regions do you think might have paralogous loci?</p>
+
+
+<a href="/gen8900/r-code/3_HWE_solutions.R" download="3_HWE_solutions.R">R code solution for HWE Exercises</a>
+
+	  </div>
+	</div>
+</div>
+</section>
+
+<!-- Footer -->
+    <footer class="py-5 bg-dark">
+      <div class="container">
+	<a class="navbar-brand" href="#top">Back to Top</a>
+        <p class="m-0 text-center text-white">Copyright &copy; LCooper CompGen-8900  2017</p>
+      </div>
+      <!-- /.container -->
+    </footer>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/popper/popper.min.js"></script>
+      <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+      
+</body>
+</html>

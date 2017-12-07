@@ -1,6 +1,62 @@
-<h3 id="beforestarting">Before Starting:</h3>
-<p>Remember to either load my "<a title="R-functions" href="https://clemson.instructure.com/courses/34867/pages/r-functions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/r-functions" data-api-returntype="Page">compGen17_fxns.R</a>" file or copy and paste the <code>read.vcf</code> function into your code.</p>
-<p>Then, load the sample data file for this week: "<a class="instructure_file_link instructure_scribd_file" title="sampleData_4_Fst.vcf" href="https://clemson.instructure.com/courses/34867/files/1889213/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/1889213" data-api-returntype="File">sampleData_4_Fst.vcf</a>".</p>
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Wright's Fst</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/css/1-col-portfolio.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+  <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">Fst-Exercises</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="/compGen8900.html">Gen-8900
+                <span class="sr-only">(current)</span>
+              </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/hwe.html">HWE-Exercises
+	        <span class="sr-only">(current)</span>
+	      </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/ld-1.html">LD-Part I
+		<span class="sr-only">(current)</span>
+	      </a>
+	      </li>
+	  </ul>
+	 </div>
+	</div>
+	</nav>
+
+	<!--Page Content -->
+	<section id="vcf-exercises">
+	<div class="container">
+	  <div class="row">
+	  <div-class="col-md-12">
+	    <h1>Population Differentiation with Fst</h1>
+<h3>Before Starting:</h3>
+<p>Remember to either load my "<a title="R-functions" href="https://gist.github.com/eacooper400/c954c757db02eb6c4ccfae1aa090658c"</a>" file or copy and paste the <code>read.vcf</code> function into your code.</p>
+<p>Then, load the sample data file for this week: sampleData_4_Fst.vcf</p>
 <h3 id="1gettheexpectedhetvaluesforeachpopulation">1. Get the EXPECTED HET values for each population</h3>
 <h4 id="partasetuptheemptyresultstable">Part A: Set up the Empty Results Table</h4>
 <p>This table should have:</p>
@@ -225,4 +281,32 @@ colnames(numericGen) = colnames(my.data)[10:ncol(my.data)]
 <pre><code>plot(pca.results$x, col=plot.col, pch=20, main="PCA of Finch Data")
 legend(18, -1, c("Fuliginosa", "Magnirostris"), col=c("darkturquoise", "darkviolet"), pch=c(20,20), cex=0.75)
 </code></pre>
-<p>What can you tell about population structure from the plot? How does the information in the 3 plots we generated today differ?</p>
+<p>What can you tell about population structure from the plot? How
+	does the information in the 3 plots we generated today
+differ?</p>
+
+
+
+<a href="/gen8900/r-code/4_FST_solutions.R" download="4_FST_solutions.R">R code solution for Fst Exercises</a>
+
+	  </div>
+	</div>
+</div>
+</section>
+
+<!-- Footer -->
+    <footer class="py-5 bg-dark">
+      <div class="container">
+	<a class="navbar-brand" href="#top">Back to Top</a>
+        <p class="m-0 text-center text-white">Copyright &copy; LCooper CompGen-8900  2017</p>
+      </div>
+      <!-- /.container -->
+    </footer>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/popper/popper.min.js"></script>
+      <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+      
+</body>
+</html>
