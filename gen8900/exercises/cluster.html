@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>R on the Cluster</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/css/1-col-portfolio.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+  <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">R-cluster</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="/compGen8900.html">Gen-8900
+                <span class="sr-only">(current)</span>
+              </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/slide-windows.html">MK-Test Exercises
+	        <span class="sr-only">(current)</span>
+	      </a>
+	    </li>
+	  </ul>
+	 </div>
+	</div>
+	</nav>
+
+	<!--Page Content -->
+	<section id="r-cluster">
+	<div class="container">
+	  <div class="row">
+	  <div-class="col-md-12">
+<h2 id="slidingwindowscanoftajimasd">An Example of Running R on the Cluster</h2>
+<h3 id="runtherscriptonyourlaptop">Run the R script on your Laptop</h3>
+<a href="/gen8900/r-code/11_forCluster.R" download="11_forCluster.R">R script to run on Palmetto</a>
+<p>This R script is written to do the following:</p>
+<ul>
+<li>read in a <em>phased</em> version of the Heliconius butterfly data from last week,</li>
+<li>calculate linkage disequilibrium (r<sup>2</sup>) between a SNP that appears to be under selection and ALL other SNPs in the data,</li>
+<li>calculate linkage disequilibrium between a SNP that does NOT appear to be under selection and ALL other SNPs in the data,</li>
+<li>Plot the mean r<sup>2</sup> in 10kb bins for both the <span style="color: #ff0000;">selected SNP (red)</span> and the <span style="color: #000080;">control SNP (blue)</span>, to see if there is a larger linkage block around the selected SNP.</li>
+</ul>
+
+<p>Setting Explicit Paths for Package Installation and Loading</p>
+<pre><code>.libPaths(c('~/compGenWS_112017/Rlibs', .libPaths()))
+install.packages("devtools",repos='http://cran.us.r-project.org',
+                  lib='~/compGenWS_112017/Rlibs', dependencies=TRUE)
+</code></pre>
+<p>Because we have limited permissions when we are logged onto Palmetto, we need to be very clear about where we tell R to install and look for packages (if we use any outside packages in our script).</p>
+</li>
+<li>
+<p>Let the Input and Output File Names, as well as the 2 SNP positions to look at be COMMAND LINE ARGUMENTS instead of hard coded within the R script:</p>
+<pre><code>args = commandArgs(trailingOnly=TRUE)
+input = args[1]
+output = args[2]
+snp1 = as.numeric(args[3])
+snp2 = as.numeric(args[4])
+
+my.data=read.vcf(input, header=TRUE)
+snp.of.interest = my.data[which(my.data$POS==snp1),]
+control.snp = my.data[which(my.data$POS==snp2),]
+</code></pre>
+<p>This step isn't required for your script to run on the cluster, but it will make it much easier to run the same script repeatedly on different input files or different SNPs.</p>
+</li>
+<li>
+<p>Use the <code>write.table</code> command to save our results table into a <code>.txt</code> file we can access later if we want to:</p>
+<pre><code>write.table(smoothed.results, paste0(output, "txt", collapse="."), quote=FALSE,
+            row.names=FALSE, col.names=TRUE, sep="\t")
+</code></pre>
+<p>This also is not required for running on the cluster, but we need it if we want to access our results after running the script!</p>
+</li>
+<li>
+<p>Open a PDF file for plotting:</p>
+<pre><code>pdf(paste0(c(output, "pdf"), collapse="."))
+dev.off()
+</code></pre>
+<p>The 2 commands above <span style="text-decoration: underline;">flank</span> the usual plotting commands in our script; the first line opens up a new pdf file (that will take the form "output.pdf"), and the second line closes the connection to that file. You don't have to use PDF format on the cluster, but you <em>do</em> have to open up some kind of file for plotting, if you run a <code>plot</code> command in your script!</p>
+</li>
+</ol>
+<h3 id="lookatthepbsjobscriptthatrunstherscript">Look at the PBS Job script that runs the R script</h3>
+<p>In a cluster environment like Palmetto, we can use a "job" script that is essentially a list of instructions telling the cluster what we want to do. The first few lines of this script have some information particular to the cluster:</p>
+<pre><code>#PBS -N rLD
+#PBS -l select=1:ncpus=1:mem=8gb,walltime=00:20:00
+#PBS -j oe
+</code></pre>
+<p>These lines tell Palmetto things like what to name our job, and what sort of resources we need to run it.</p>
+<p>The next line loads the R software onto whatever node we end up assigned to:</p>
+<pre><code>module load R/3.3.2
+</code></pre>
+<p>Then, we will <code>cd</code> into the directory with our files:</p>
+<pre><code>cd $HOME/compGenWS_112017
+</code></pre>
+<p>And the last line actually runs the R script:</p>
+<pre><code>Rscript --vanilla Scripts/11_forCluster.R <span style="color: #339966;">SampleData/heli_phased.vcf</span> <span style="color: #800000;">heli_rsq_results</span> <span style="color: #800080;">700962</span> <span style="color: #ff6600;">1531867
+</span></code></pre>
+<p>The general format for command line R will ALWAYS be: <code>Rscript
+--vanilla YOUR_SCRIPT.R</code> followed by all of your command line arguments. Notice I have 4 arguments here, each separated by a space:</p>
+<ol>
+<li><span style="color: #339966;">the sample data file name</span></li>
+<li><span style="color: #800000;">a prefix for my output files</span></li>
+<li><span style="color: #800080;">a position for the first snp I want to look at</span></li>
+<li><span style="color: #ff6600;">a position for the second snp I want to look at</span></li>
+</ol>
+<h3 id="runthescriptonthecluster">Run the script on the Cluster:</h3>
+<p>Log into your Palmetto account, either through the Moba-Xterm app, or directly from the Terminal (on a Mac):</p>
+<pre><code>ssh ecoope4@user.palmetto.clemson.edu
+</code></pre>
+<p>Once logged in, clone the sample files and scripts for this week into your home directory:</p>
+<pre><code>git clone https://github.com/eacooper400/compGenWS_112017.git
+</code></pre>
+<p>Next, we will <code>cd</code> into the folder we just cloned, find the .pbs job script, and submit it:</p>
+<pre><code>cd compGenWS_112017/
+cd Scripts/
+qsub run_rscript_1.pbs
+</code></pre>
+<p>To check the progress of the script, you can use <code>qstat -u</code> followed by your username:</p>
+<pre><code>qstat -u ecoope4
+</code></pre>
+<p>Under the next to the last column, you should see an "R" if your script is "Running," or a "Q" if your script is still queued. If nothing shows up, then the job has finished. This script will take about 5 full minutes to run the first time (because of installing <code>devtools</code> and all of its dependencies).</p>
+<p>When it is finished, you can see the output files here:</p>
+<pre><code>cd ..
+ls -lh
+</code></pre>
+<p>Try the <code>less</code> command to look at the ".txt" file. To look at the pdf results, you need to first download them (with <code>sftp</code> or whatever is recommended for Windows).</p>
+<h3 id="editthepbsjobscripttorunonanewsetofpositions">Edit the PBS job script to Run on a new Set of Positions</h3>
+<p>One of the reasons I set up the R script the way that I did with the command line arguments was to make it easy to repeatedly use it on different sets of SNP positions.</p>
+<p>First, I'm going to edit the <code>11_forCluster.R</code> script so that it does not waste time re-installing <code>devtools</code>, because we've already got that installed now.</p>
+<p>Let's say that there were 2 other "control" positions: 42,071 and 337,985 that I wanted to compare my potentially selected SNP (at 700962) to. I can easily edit my <code>run_rscript_1.pbs</code> script to do this:</p>
+<pre><code>cd ~/compGenWS_112017/Scripts
+nano run_rscript_1.pbs
+</code></pre>
+<p>While in "nano" (a text editor for the command line), let's copy and paste the line starting with "Rscript" 2 more times:</p>
+<pre><code>Rscript --vanilla Scripts/11_forCluster.R SampleData/heli_phased.vcf heli_rsq_results 700962 1531867
+<span style="color: #ff6600;">Rscript --vanilla Scripts/11_forCluster.R SampleData/heli_phased.vcf heli_rsq_results 700962 1531867</span>
+<span style="color: #ff6600;">Rscript --vanilla Scripts/11_forCluster.R SampleData/heli_phased.vcf heli_rsq_results 700962 1531867
+</span></code></pre>
+<p>Next, I edit my very last argument (which is the 2nd SNP position) to be different each time:</p>
+<pre><code>Rscript --vanilla Scripts/11_forCluster.R SampleData/heli_phased.vcf heli_rsq_results 700962 1531867
+Rscript --vanilla Scripts/11_forCluster.R SampleData/heli_phased.vcf heli_rsq_results 700962 <span style="color: #ff6600;">42071</span>
+Rscript --vanilla Scripts/11_forCluster.R SampleData/heli_phased.vcf heli_rsq_results 700962 <span style="color: #ff6600;">337985
+</span></code></pre>
+<p>Finally, I'll make sure to edit my output name/prefix, so that I don't accidentally overwrite the results from one run with the results from another:</p>
+<pre><code>Rscript --vanilla Scripts/11_forCluster.R SampleData/heli_phased.vcf heli_rsq_results 700962 1531867
+Rscript --vanilla Scripts/11_forCluster.R SampleData/heli_phased.vcf <span style="color: #ff6600;">heli_rsq_results2</span> 700962 42071 
+Rscript --vanilla Scripts/11_forCluster.R SampleData/heli_phased.vcf <span style="color: #ff6600;">heli_rsq_results3</span> 700962 337985
+</code></pre>
+<p>To save this file, type <code>Control-X</code>, then when prompted to save, type the letter "y." Let's give it a new file name: <code>run_rscript_2.pbs</code>, and hit ENTER. Type "y" again when asked if you want to save under a new name. Now submit this new job:</p>
+<pre><code>qsub run_rscript_2.pbs
+</code></pre>
+<p>When this job finishes, you should now have 6 output files: 2 for each run of the script.</p>
+<h3 id="runthescriptonmultiplecoresormultiplenodes">Run the Script on Multiple Cores or Multiple Nodes</h3>
+<p>There are a couple of other ways we could make this even more efficient. Let's open the <code>run_rscript_2.pbs</code> file with <code>nano</code> again, and now add an <code>&amp;</code> symbol after each line. This will let the next line start running <span style="text-decoration: underline;">before</span> the first line finishes, so we can use multiple cores (without having to change how we write our R script at all):</p>
+<pre><code>cd Scripts/
+nano run_rscript_2.pbs
+
+#PBS -N rLD
+#PBS -l select=1:<span style="color: #ff6600;">ncpus=4:mem=31gb</span>,walltime=00:20:00
+#PBS -j oe
+
+module load R/3.3.2
+
+cd $HOME/compGenWS_112017
+
+Rscript --vanilla Scripts/11_forCluster.R SampleData/heli_phased.vcf heli_rsq_results 700962 1531867 <span style="color: #ff6600;">&amp;</span>
+Rscript --vanilla Scripts/11_forCluster.R SampleData/heli_phased.vcf heli_rsq_results2 700962 42071 <span style="color: #ff6600;">&amp;</span>
+Rscript --vanilla Scripts/11_forCluster.R SampleData/heli_phased.vcf heli_rsq_results3 700962 337985
+
+<span style="color: #ff6600;">wait</span>
+
+qsub run_rscript_3.pbs
+</code></pre>
+<p>The above job should take less than a minute to complete (vs. the previous job with took about 1.5 minutes).</p>
+<p>Yet another option is to make a <em>separate</em> job script for each of the runs, and then we could submit them all simultaneously.</p>
+<p>I'll start by copying <code>run_rscript_1.pbs</code>&nbsp;3 times:</p>
+<pre><code>cp run_rscript_1.pbs run_rSim1.pbs
+cp run_rscript_1.pbs run_rSim2.pbs
+cp run_rscript_1.pbs run_rSim3.pbs
+</code></pre>
+<p>The first script is fine as is; so let's modify each of the other 2 to test the positions that we want, and to name the output files how we want:</p>
+<pre><code>nano run_rSim2.pbs
+
+Rscript --vanilla Scripts/11_forCluster.R SampleData/heli_phased.vcf <span style="color: #ff6600;">heli_rsq_results2</span> 700962 <span style="color: #ff6600;">42071</span>
+
+nano run_rSim3.pbs
+
+Rscript --vanilla Scripts/11_forCluster.R SampleData/heli_phased.vcf <span style="color: #ff6600;">heli_rsq_results3</span> 700962 <span style="color: #ff6600;">337985
+</span></code></pre>
+<p>Here's a small loop to run <code>qsub</code> on all of them:</p>
+<pre><code>for file in ./run_rSim*
+do
+    qsub $file
+done
+</code></pre>
+<p>You are actually allowed to submit up to 500 jobs at once on Palmetto! Since our R scripts only use 1 core each, using the <code>&amp;</code> method is probably the most convenient - it let's you keep everything organized in 1 script, and also speeds things up.</p>
+<p>But if you really have a lot of mini jobs, OR if you've got an R script that can use multiple cores, then writing and submitting a separate pbs script for each of them can be the way to go to get things done very efficiently.</p>
+
+
+	  </div>
+	</div>
+</div>
+</section>
+
+<!-- Footer -->
+    <footer class="py-5 bg-dark">
+      <div class="container">
+	<a class="navbar-brand" href="#top">Back to Top</a>
+        <p class="m-0 text-center text-white">Copyright &copy; LCooper CompGen-8900  2017</p>
+      </div>
+      <!-- /.container -->
+    </footer>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/popper/popper.min.js"></script>
+      <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+      
+</body>
+</html>
