@@ -1,6 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Allele Frequency Spectra</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/css/1-col-portfolio.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+  <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">AFS-Exercises</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="/compGen8900.html">Gen-8900
+                <span class="sr-only">(current)</span>
+              </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/ld-2.html">LD-ptII-Exercises
+	        <span class="sr-only">(current)</span>
+	      </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/tajd.html">TajimasD-Exercises
+		<span class="sr-only">(current)</span>
+	      </a>
+	      </li>
+	  </ul>
+	 </div>
+	</div>
+	</nav>
+
+	<!--Page Content -->
+	<section id="afs-exercises">
+	<div class="container">
+	  <div class="row">
+	  <div-class="col-md-12">
 <h2 id="plottingtheallelefrequencyspectrumandcalculatingwatersonstheta">Plotting the Allele Frequency Spectrum and Calculating Waterson's Theta</h2>
 <h3 id="gettingstarted">Getting Started</h3>
-<p>As always, you need to first get any functions that you might need (here is a link to instructions for loading my <a title="R-functions" href="https://clemson.instructure.com/courses/34867/pages/r-functions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/r-functions" data-api-returntype="Page">CompGen17 functions</a> file), and then read in the sample VCF file for this week: <a class="instructure_file_link instructure_scribd_file" title="7_sampleData_AFS.vcf" href="https://clemson.instructure.com/courses/34867/files/2094925/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2094925" data-api-returntype="File">7<em>sampleData</em>AFS.vcf</a>.</p>
+<p>Remember to either load my <a
+	href="https://gist.github.com/eacooper400/c954c757db02eb6c4ccfae1aa090658c">CompGen_Fxns17.R</a>
+	file or copy and paste the <code>read.vcf</code> function into
+	    your code.</p>
+<p>Then read in the sample VCF file for this week:7_sampleData_AFS.vcf</p>
 <p>Once you have read this file in, check that it has the correct dimensions:</p>
 <pre><code>dim(my.data)
 [1] 1946   33
@@ -15,7 +74,7 @@
 [1]  5  3 25 12  7  5
 </code></pre>
 <h3 id="step2plotahistogramofthecounts">Step 2: Plot a Histogram of the Counts</h3>
-<p>Now that we've got the derived counts, we can use R's built-in histogram function (which we have used before during the <a title="FST Exercises" href="https://clemson.instructure.com/courses/34867/pages/fst-exercises" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/fst-exercises" data-api-returntype="Page">FST week</a>) to plot the frequency of each count.</p>
+<p>Now that we've got the derived counts, we can use R's built-in histogram function (which we have used before during the FST Exercises) to plot the frequency of each count.</p>
 <p>The general structure of the histogram command will look like this:</p>
 <pre><code>hist(x=<span style="color: #800000;">YOUR COUNTS</span>, breaks=<span style="color: #800000;">A VECTOR WITH ALL POSSIBLE COUNT VALUES</span>)
 </code></pre>
@@ -112,4 +171,31 @@ head(compare.counts)
 <pre><code>barplot(t(compare.counts), beside=T, col=c("lightblue", "black"))
 legend("topright", c("Obs", "Exp"), pch=c(15,15), col=c("lightblue", "black"))
 </code></pre>
-<p>How well does the observed data line up to the neutral distribution? In what ways does it differ? Do you have any hypotheses about what might cause this type of difference?</p>
+<p>How well does the observed data line up to the neutral
+ distribution? In what ways does it differ? Do you have any hypotheses
+about what might cause this type of difference?</p>
+
+<a href="/gen8900/r-code/7_AFS_solutions.R"
+download="7_AFS_solutions.R">R code solution AFS Exercises</a>
+
+	  </div>
+	</div>
+</div>
+</section>
+
+<!-- Footer -->
+    <footer class="py-5 bg-dark">
+      <div class="container">
+	<a class="navbar-brand" href="#top">Back to Top</a>
+        <p class="m-0 text-center text-white">Copyright &copy; LCooper CompGen-8900  2017</p>
+      </div>
+      <!-- /.container -->
+    </footer>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/popper/popper.min.js"></script>
+      <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+      
+</body>
+</html>

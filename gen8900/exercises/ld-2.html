@@ -1,8 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Linkage Disequilibrium II</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/css/1-col-portfolio.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+  <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">LD-ptII-Exercises</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="/compGen8900.html">Gen-8900
+                <span class="sr-only">(current)</span>
+              </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/ld-1.html">LD-ptI-Exercises
+	        <span class="sr-only">(current)</span>
+	      </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/afs.html">AFS-Exercises
+		<span class="sr-only">(current)</span>
+	      </a>
+	      </li>
+	  </ul>
+	 </div>
+	</div>
+	</nav>
+
+	<!--Page Content -->
+	<section id="ld2-exercises">
+	<div class="container">
+	  <div class="row">
+	  <div-class="col-md-12">
 <h2 id="calculateandplotthedecayoflinkagedisequilibriumwithdistance">Calculate and plot the decay of linkage disequilibrium with distance</h2>
 <p>Using our code from last week that calculates distance, D, and r<sup>2</sup>, this week we will create a loop that performs these calculations on <strong>all</strong> PAIRS of sites in a data file with 155 SNPs.</p>
 <h3 id="beforestarting">Before Starting:</h3>
-<p>Make sure that you have access to the <code>read.vcf()</code> function (either from my <a title="R-functions" href="https://clemson.instructure.com/courses/34867/pages/r-functions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/r-functions" data-api-returntype="Page">compGen17_fxns.R</a> file or copying and pasting from your previous code).</p>
-<p>Then, load the sample data file for this week: <a class="instructure_file_link instructure_scribd_file" title="6_sampleData_LD.vcf" href="https://clemson.instructure.com/courses/34867/files/1971057/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/1971057" data-api-returntype="File">6_sampleData<em>_</em>LD.vcf</a>.</p>
+<p>Remember to either load my <a href="https://gist.github.com/eacooper400/c954c757db02eb6c4ccfae1aa090658c">CompGen_Fxns17.R</a> file or copy and paste the <code>read.vcf</code> function into your code.</p>
+<p>Then, load the sample data file for this week:6_sampleData_LD.vc</p>
 <p>You should have a total of <strong>155 rows</strong> and <strong>42 columns</strong> if your data is read in correctly.</p>
 <h3 id="setupanemptyresultstable">Set up an Empty Results Table:</h3>
 <p>As usual, we need to create a new data table to store results BEFORE starting our loop, but this time, the number of results that we are going to generate will be <strong>more</strong> than the number of rows we start out with.</p>
@@ -287,4 +342,31 @@ exp.rsquared=(((10+(rho.estimate*Distance))/((2+(rho.estimate*Distance))*(11+(rh
 <pre><code>lines(Distance, exp.rsquared, col="purple", lwd=2)
 legend(32000,0.99, c("Means", "Expected R2"), lty=c(1,1), col=c("red", "purple"))
 </code></pre>
-<p>How well does your fitted curve match up to your moving average curve?</p>
+<p>How well does your fitted curve match up to your moving average
+curve?</p>
+
+
+<a href="/gen8900/r-code/6_LDpt2_solutions.R"
+download="6_LDpt2_solutions.R">R code solution for LD II Exercises</a>
+
+	  </div>
+	</div>
+</div>
+</section>
+
+<!-- Footer -->
+    <footer class="py-5 bg-dark">
+      <div class="container">
+	<a class="navbar-brand" href="#top">Back to Top</a>
+        <p class="m-0 text-center text-white">Copyright &copy; LCooper CompGen-8900  2017</p>
+      </div>
+      <!-- /.container -->
+    </footer>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/popper/popper.min.js"></script>
+      <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+      
+</body>
+</html>
