@@ -1,0 +1,213 @@
+<h2 id="calculatethelinkagedisequilibriumstatisticrsquared">Calculate the Linkage Disequilibrium statistic R<sup>2</sup></h2>
+<p><strong>Objective:</strong> The goal for today's exercise is to write and save the code that you will use again next week to estimate linkage disequilibrium (LD) in a larger data file.</p>
+<h3 id="beforestarting">Before Starting:</h3>
+<p>As always, remember to either load my "compGen17_fxns.R" file or copy and paste the <code>read.vcf</code> function into your code.</p>
+<p>Then, load the sample data file for this week: "<a class="instructure_file_link instructure_scribd_file" title="sampleData_LDmini.vcf" href="https://clemson.instructure.com/courses/34867/files/1928856/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/1928856" data-api-returntype="File">sampleData_LDmini.vcf</a>".</p>
+<p>You should have a total a 5 rows and 42 columns after reading in the data. You can check with the <code>dim()</code> function:</p>
+<pre><code>dim(my.data)
+[1]  5 42
+</code></pre>
+<h3 id="recommended">Recommended:</h3>
+<p>Extract Row 1 and Row 2 of <code>my.data</code> into 2 separate variables, and use these to test your calculations to start with (rather than worrying about the loop yet).</p>
+<pre><code>row1=as.vector(my.data[1,], mode="character")
+row2=as.vector(my.data[2,], mode="character")
+</code></pre>
+<p>Remember that in a VCF file, <span style="text-decoration: underline;">each row is a position</span>, so <span style="color: #008080;">row1</span> is "<span style="color: #008080;">position 1</span>" and <span style="color: #800080;">row2</span> is "<span style="color: #800080;">position 2</span>".</p>
+<h3 id="1calculatethephysicaldistancebetweenthe2positions">1. Calculate the <span style="text-decoration: underline;">physical distance</span> between the 2 positions</h3>
+<p>The distance between positions isn't part of the actual LD calculation, but next week we will want to plot LD as a function of distance (in base pairs), so you should have this as part of your code now.</p>
+<p><strong>Remember:</strong> Since we have made our vectors into "character" vectors above, you will need to use the <code>as.numeric()</code> function to be able to transform values back into numbers that can be used in math equations.</p>
+<h3 id="2calculatethecoefficientoflinkagedisequilibriumd">2. Calculate the coefficient of Linkage Disequilibrium (D)</h3>
+<p><img class="equation_image" title="D\:=\:pAB\:-\:pA\cdot pB" src="https://clemson.instructure.com/equation_images/D%255C%253A%253D%255C%253ApAB%255C%253A-%255C%253ApA%255Ccdot%2520pB" alt="LaTeX: D\:=\:pAB\:-\:pA\cdot pB" data-equation-content="D\:=\:pAB\:-\:pA\cdot pB" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;D&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;p&lt;/mi&gt;
+  &lt;mi&gt;A&lt;/mi&gt;
+  &lt;mi&gt;B&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;&amp;#x2212;&lt;!-- &minus; --&gt;&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;p&lt;/mi&gt;
+  &lt;mi&gt;A&lt;/mi&gt;
+  &lt;mo&gt;&amp;#x22C5;&lt;!-- &sdot; --&gt;&lt;/mo&gt;
+  &lt;mi&gt;p&lt;/mi&gt;
+  &lt;mi&gt;B&lt;/mi&gt;
+&lt;/math&gt;" /></p>
+<p><em>pA</em> is the frequency of the "0" allele at <span style="color: #008080;">position 1</span> (in other words, this is the same as <em>p</em> for <span style="color: #008080;">row 1</span>).</p>
+<p><em>pB</em> is the frequency of the "0" allele at <span style="color: #800080;">position 2</span>.</p>
+<p>Below are my calculated values for <em>pA</em> and <em>pB</em>, so you can check your own calculations:</p>
+<pre><code>pA
+[1] 0.6363636
+
+pB
+[1] 0.09090909 
+</code></pre>
+<p><em>pAB</em> is the frequency of the "AB" haplotype, or in other words the percentage of times you see the "0" allele <span style="text-decoration: underline;">on the same side of the "|"</span> when you look across BOTH positions).</p>
+<p>Finding <em>pAB</em> will be the most challenging part of the exercises today, so don't worry if you feel you spend most of your time on this part!</p>
+<p>Here are my final results for <em>pAB</em> and <em>D</em>, so you can check your calculations:</p>
+<pre><code>pAB
+[1] 0.09090909
+
+D
+[1] 0.03305785
+</code></pre>
+<h3 id="reminderofsomeusefulrcommands">Reminder of Some Useful R commands:</h3>
+<p>To help you with the calculation of <em>pAB</em>, here is a quick reminder of some R functions we have seen before, that you might find useful today.</p>
+<ul>
+<li><em>These are just meant as hints; do NOT feel obligated to use these in your own solutions if you don't want to!</em></li>
+</ul>
+<div style="margin: 50px 15% 50px 15%; background-color: #cccccc;">
+<div style="position: relative; top: -20px; left: -20px; padding: 20px; background: #ffffff; border: 2px solid #cccccc;">
+<h4 id="gsub"><strong>gsub</strong></h4>
+<p>You can use <code>gsub()</code> to replace patterns. This could include replacing a character string with a number:</p>
+<pre><code>a = c("0|0", "0|1", "1|1", "1|0")
+b = c("1|1", "1|0", "1|0", "0|1")
+
+gsub("0\\|0", 1, a)
+[1] "1"   "0|1" "1|1" "1|0"<br />
+gsub("0\\|1", 2, b)
+[1] "1|1" "1|0" "1|0" "2"
+</code></pre>
+<p>Or, you can get rid of a pattern or character by replacing with "":</p>
+<pre><code>gsub("\\|", "", a)
+[1] "00" "01" "11" "10"<br />
+gsub("\\|", "", b)
+[1] "11" "10" "10" "01"
+</code></pre>
+<h4 id="paste0"><strong>paste0</strong></h4>
+<p>You can use <code>paste0</code> to paste all of the items in one vector together into a single word:</p>
+<pre><code>c = gsub("\\|", "", a)
+c
+[1] "00" "01" "11" "10"
+<br />paste0(c, collapse="")
+[1] "00011110"
+</code></pre>
+<p>Or, you could paste together EACH item in a set of 2 vectors:</p>
+<pre><code>c
+[1] "00" "01" "11" "10"<br />
+d = gsub("\\|", "", b)
+d
+[1] "11" "10" "10" "01"<br />
+paste0(c,d)
+[1] "0011" "0110" "1110" "1001"
+</code></pre>
+<p>Notice that I can also add a separator character when I paste things together:</p>
+<pre><code>paste(c,d, sep="|")
+[1] "00|11" "01|10" "11|10" "10|01"
+</code></pre>
+<h4 id="strsplit"><strong>strsplit</strong></h4>
+<p>In addition to pasting things together, we can also split them apart, either by a separating character or by the "" character (if we want to split everything into a separate item):</p>
+<pre><code>f=paste(c,d, sep="|")
+f
+[1] "00|11" "01|10" "11|10" "10|01"<br />
+unlist(strsplit(f, split="\\|"))
+[1] "00" "11" "01" "10" "11" "10" "10" "01"
+
+unlist(strsplit(f, split=""))
+ [1] "0" "0" "|" "1" "1" "0" "1" "|" "1" "0" "1" "1" "|" "1" "0" "1" "0" "|" "0" "1"
+</code></pre>
+<h4 id="transpose"><strong>transpose</strong></h4>
+<p>If you would rather view your sites as 2 columns side-by-side, rather than 2 rows stacked together, you can use <code>t()</code>:</p>
+<pre><code> x
+  [,1]  [,2]  [,3]  [,4] 
+a "0|0" "0|1" "1|1" "1|0"
+b "1|1" "1|0" "1|0" "0|1"
+<br />y=t(x)
+y
+     a     b    
+[1,] "0|0" "1|1"
+[2,] "0|1" "1|0"
+[3,] "1|1" "1|0"
+[4,] "1|0" "0|1"
+</code></pre>
+<h4 id="ifelseloops"><strong>if/else loops</strong></h4>
+<p>If you want to test a certain condition, you can use an <code>if</code> loop, or an <code>if/else</code> combination:</p>
+<pre><code>g=unlist(strsplit(f, split=""))
+g
+ [1] "0" "0" "|" "1" "1" "0" "1" "|" "1" <br />"0" "1" "1" "|" "1" "0" "1" "0" "|" "0" "1"
+
+if (g[1]=="0") {<br />print("The first allele is 0")}
+[1] "The first allele is 0"
+
+if (g[1]=="0") { 
+    print("The first allele is 0") 
+} else {
+    print("The first allele is NOT 0")<br />}
+</code></pre>
+<p>You can also test multiple conditions:</p>
+<pre><code>if ((g[1]=="0") &amp; (g[2]=="0")) {
+      print("The first 2 alleles are 0")
+} else {
+      print("One or both of the first 2 \<br />      alleles is not 0")
+}
+[1] "The first 2 alleles are 0"
+</code></pre>
+<p>In addition to the <code>&amp;</code> symbol for "AND" you can also use the <code>|</code> symbol for "OR" and the <code>!</code> symbol for "NOT".</p>
+</div>
+</div>
+<h3 id="3calculatersquared">3. Calculate r<sup>2</sup><sup>.</sup></h3>
+<p>Once you have the value for <em>D</em> along with the values for <em>pA</em> and <em>pB</em>, you can easily calculate <em>r<sup>2</sup></em> with the equation below:</p>
+<p><img class="equation_image" title="r^2=\frac{D^2}{pA\cdot\left(1-pA\right)\cdot pB\cdot\left(1-pB\right)}" src="https://clemson.instructure.com/equation_images/r%255E2%253D%255Cfrac%257BD%255E2%257D%257BpA%255Ccdot%255Cleft%25281-pA%255Cright%2529%255Ccdot%2520pB%255Ccdot%255Cleft%25281-pB%255Cright%2529%257D" alt="LaTeX: r^2=\frac{D^2}{pA\cdot\left(1-pA\right)\cdot pB\cdot\left(1-pB\right)}" data-equation-content="r^2=\frac{D^2}{pA\cdot\left(1-pA\right)\cdot pB\cdot\left(1-pB\right)}" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msup&gt;
+    &lt;mi&gt;r&lt;/mi&gt;
+    &lt;mn&gt;2&lt;/mn&gt;
+  &lt;/msup&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mfrac&gt;
+    &lt;msup&gt;
+      &lt;mi&gt;D&lt;/mi&gt;
+      &lt;mn&gt;2&lt;/mn&gt;
+    &lt;/msup&gt;
+    &lt;mrow&gt;
+      &lt;mi&gt;p&lt;/mi&gt;
+      &lt;mi&gt;A&lt;/mi&gt;
+      &lt;mo&gt;&amp;#x22C5;&lt;!-- &sdot; --&gt;&lt;/mo&gt;
+      &lt;mrow&gt;
+        &lt;mo&gt;(&lt;/mo&gt;
+        &lt;mrow&gt;
+          &lt;mn&gt;1&lt;/mn&gt;
+          &lt;mo&gt;&amp;#x2212;&lt;!-- &minus; --&gt;&lt;/mo&gt;
+          &lt;mi&gt;p&lt;/mi&gt;
+          &lt;mi&gt;A&lt;/mi&gt;
+        &lt;/mrow&gt;
+        &lt;mo&gt;)&lt;/mo&gt;
+      &lt;/mrow&gt;
+      &lt;mo&gt;&amp;#x22C5;&lt;!-- &sdot; --&gt;&lt;/mo&gt;
+      &lt;mi&gt;p&lt;/mi&gt;
+      &lt;mi&gt;B&lt;/mi&gt;
+      &lt;mo&gt;&amp;#x22C5;&lt;!-- &sdot; --&gt;&lt;/mo&gt;
+      &lt;mrow&gt;
+        &lt;mo&gt;(&lt;/mo&gt;
+        &lt;mrow&gt;
+          &lt;mn&gt;1&lt;/mn&gt;
+          &lt;mo&gt;&amp;#x2212;&lt;!-- &minus; --&gt;&lt;/mo&gt;
+          &lt;mi&gt;p&lt;/mi&gt;
+          &lt;mi&gt;B&lt;/mi&gt;
+        &lt;/mrow&gt;
+        &lt;mo&gt;)&lt;/mo&gt;
+      &lt;/mrow&gt;
+    &lt;/mrow&gt;
+  &lt;/mfrac&gt;
+&lt;/math&gt;" /></p>
+<p>Here is my result, to help you check your math:</p>
+<pre><code>rsq
+[1] 0.05714286
+</code></pre>
+<h3 id="4performthecalculationsontheremainingsitepairs">4. Perform the calculations on the remaining Site pairs.</h3>
+<p>This step is mostly so that you can double check your math and make sure your code works on all of the site pairs. You can either do this step by manually extracting the other rows (the way we did with rows 1 and 2 above) and copying and pasting the code for the calculations, OR if you feel comfortable, you can try writing the loop that will do this for you.</p>
+<p>Do NOT feel obligated to try and reproduce the exact results table structure I have below; you can simply get your calculations, write them down, and check them by eye if you prefer.</p>
+<p>We will discuss how to set up the results table and the loop next week.&nbsp; Of course, if you want to give it a try this week, then go ahead!</p>
+<p>Below are my results for all site pairs:</p>
+<pre><code><span style="color: #008080;">   First Site</span> <span style="color: #800080;">Second Site</span> Distance (bp)            D         Rsq
+1           <span style="color: #008080;">1</span>           <span style="color: #800080;">2</span>            14  0.033057851 0.057142857
+2           <span style="color: #008080;">1</span>           <span style="color: #800080;">3</span>            34  0.038567493 0.067796610
+3           <span style="color: #008080;">1</span>           <span style="color: #800080;">4</span>           126 -0.016528926 0.027210884
+4           <span style="color: #008080;">1</span>           <span style="color: #800080;">5</span>          1552  0.004132231 0.002511161
+5           <span style="color: #008080;">2</span>           <span style="color: #800080;">3</span>            20  0.081267218 0.842857143
+6           <span style="color: #008080;">2</span>           <span style="color: #800080;">4</span>           112  0.004132231 0.004761905
+7           <span style="color: #008080;">2</span>           <span style="color: #800080;">5</span>          1538 -0.012396694 0.063281250
+8           <span style="color: #008080;">3</span>           <span style="color: #800080;">4</span>            92  0.004820937 0.005649718
+9           <span style="color: #008080;">3</span>           <span style="color: #800080;">5</span>          1518 -0.011937557 0.051150121
+10          <span style="color: #008080;">4</span>           <span style="color: #800080;">5</span>          1426 -0.001377410 0.001488095
+</code></pre>

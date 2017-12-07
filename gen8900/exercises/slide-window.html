@@ -1,0 +1,456 @@
+<h2 id="slidingwindowtestswithmultipletests">Sliding Windows with Multiple Statistics</h2>
+<p>For today's exercises, we will be scanning a region of the <em>Heliconius</em> butterfly genome that is potentially experiencing selection for color pattern differences.</p>
+<p>Our goal is to plot Tajima's D in 10 kb sliding windows (with 2kb of overlap), along with its components: <img class="equation_image" title="\theta_W" src="https://clemson.instructure.com/equation_images/%255Ctheta_W" alt="LaTeX: \theta_W" data-equation-content="\theta_W" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;W&lt;/mi&gt;
+  &lt;/msub&gt;
+&lt;/math&gt;" />&nbsp;and <img class="equation_image" title="\pi" src="https://clemson.instructure.com/equation_images/%255Cpi" alt="LaTeX: \pi" data-equation-content="\pi" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;&amp;#x03C0;&lt;!-- &pi; --&gt;&lt;/mi&gt;
+&lt;/math&gt;" />&nbsp;. We'll also add a new statistic to the plot, called D<sub>xy</sub> (the average nucleotide <strong>divergence</strong>), which is very similar to <img class="equation_image" title="\pi" src="https://clemson.instructure.com/equation_images/%255Cpi" alt="LaTeX: \pi" data-equation-content="\pi" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;&amp;#x03C0;&lt;!-- &pi; --&gt;&lt;/mi&gt;
+&lt;/math&gt;" />, except that it only compares pairs of sequences from <span style="text-decoration: underline;">different populations</span> (instead of all pairs).</p>
+<h3 id="gettingstarted">Getting Started</h3>
+<p>First, I go through the usual steps of setting my working directory, then loading the functions from <a title="R-functions" href="https://clemson.instructure.com/courses/34867/pages/r-functions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/r-functions" data-api-returntype="Page">CompGen17_fxns.R</a>, and reading in the VCF file for this week: <a class="instructure_file_link instructure_scribd_file" title="heliconius.vcf" href="https://clemson.instructure.com/courses/34867/files/2193753/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2193753" data-api-returntype="File">heliconius.vcf</a>. Also, I've recently learned that you can globally set the option <code>stringsAsFactors=FALSE</code> for an entire R session, so I'm going to do that as well:</p>
+<pre><code>library(devtools)
+source_gist("c954c757db02eb6c4ccfae1aa090658c", filename="compGen17_fxns.R", quiet=TRUE)
+options(stringsAsFactors=FALSE)
+my.data=read.vcf("heliconius.vcf", header=TRUE)
+</code></pre>
+<h3 id="setuptheresultstabledefinethewindowpositions">Set up the Results Table, Define the Window Positions</h3>
+<p>Next, we want to follow the same procedure we used for the <a title="Tajima's D SOLUTIONS" href="https://clemson.instructure.com/courses/34867/pages/tajimas-d-solutions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/tajimas-d-solutions" data-api-returntype="Page">Tajima's D exercises</a> to find the <span style="text-decoration: underline;">Start</span> and <span style="text-decoration: underline;">End</span> positions of all of our windows, and then set up our results table.</p>
+<p>We are going to allow <strong>2000 bp of overlap</strong> between our windows this time (to make sure we don't miss anything), so the set-up for our scan will look like this:</p>
+<p><img src="https://clemson.instructure.com/courses/34867/files/2197218/preview" alt="slidingWin.png" width="720" height="405" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2197218" data-api-returntype="File" /></p>
+<ol>
+<li>
+<p>Find all of the Window <span style="color: #00ff00;">START</span> positions. I recommend using the <code>seq(from, to, by)</code> function, like we did to find the sliding windows <a title="Tajima's D SOLUTIONS" href="https://clemson.instructure.com/courses/34867/pages/tajimas-d-solutions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/tajimas-d-solutions" data-api-returntype="Page">2 weeks ago</a>. Finding the <code>from</code> and <code>to</code> values will be exactly the same, but your <code>by</code> value is going to change a bit (because of the overlaps and the new window size).</p>
+</li>
+<li>
+<p>Find all of the Window <span style="color: #ff0000;">END</span> positions. Then put the Start and the End positions into a data frame like this:</p>
+<pre><code>my.results = data.frame(Start, End)
+</code></pre>
+</li>
+</ol>
+<h3 id="calculatethenumberofsequencedbasepairsandthenumberofsnpsineachwindow">Calculate the Number of Sequenced Base Pairs AND the number of SNPs in each Window</h3>
+<p>All of the VCF files we have worked with up until now have only had data for the positions where there was at least one mutation. This is the standard format, but it doesn't let you distinguish between sites where there is no mutation vs. sites where there is no data.</p>
+<p>For sliding window tests, this can make a big difference, so for this week's exercise we have a more extensive file, with 1 ROW for EVERY non-missing base pair in the genome, whether or not it has a SNP.</p>
+<ol>
+<li>
+<p>Add a new column to your Results table call "NumBP." Now loop through all of your Window positions, get the subset of data in each window, and determine how many total <strong>base pairs</strong> are in each window.</p>
+</li>
+<li>
+<p>Now that you know how much data you actually have in each window, we don't really have much need for the non-SNP sites anymore, so let's get rid of them (to save some space and memory). To compare the format of a line with a SNP and a line without a SNP, type:</p>
+<pre><code>my.data[c(1,1775),1:13]
+</code></pre>
+<p>Think about what is different about these two lines that you could take advantage of to select only the lines with/without SNPs, and then use that pattern to select only the rows from my.data with SNPs.</p>
+</li>
+<li>
+<p>Once you remove the lines without SNPs from <code>my.data</code>, add another new column to you Results called "NumSNP." Loop through your Windows again, and this time count the number of SNPs in each window.</p>
+</li>
+</ol>
+<h3 id="calculatethetawpiandtajimasd">Calculate Theta-W, Pi, and Tajima's D</h3>
+<p>Now, we want to get these 3 calculations for each of our Windows, so set up 3 new columns in your Results.</p>
+<pre><code>my.results$Tajima=0
+my.results$Theta=0
+my.results$Pi=0
+</code></pre>
+<p><em>Optional: you might want to add an extra column to hold your variance calculation, if it helps with your final Tajima's D calculation.</em></p>
+<p>These are going to be the exact same calculations that we did during the Tajima's D exercise, so you should be able to copy and paste code from either your solutions or mine!</p>
+<p>As a reminder, here are the equations for each statistic:</p>
+<p><img class="equation_image" title="\theta_W=\frac{S_n}{\sum^{2N-1}_{i=1}\left(\frac{1}{i}\right)}\:,\:S_n=\:the\:number\:of\:SNPs" src="https://clemson.instructure.com/equation_images/%255Ctheta_W%253D%255Cfrac%257BS_n%257D%257B%255Csum%255E%257B2N-1%257D_%257Bi%253D1%257D%255Cleft%2528%255Cfrac%257B1%257D%257Bi%257D%255Cright%2529%257D%255C%253A%252C%255C%253AS_n%253D%255C%253Athe%255C%253Anumber%255C%253Aof%255C%253ASNPs" alt="LaTeX: \theta_W=\frac{S_n}{\sum^{2N-1}_{i=1}\left(\frac{1}{i}\right)}\:,\:S_n=\:the\:number\:of\:SNPs" data-equation-content="\theta_W=\frac{S_n}{\sum^{2N-1}_{i=1}\left(\frac{1}{i}\right)}\:,\:S_n=\:the\:number\:of\:SNPs" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;W&lt;/mi&gt;
+  &lt;/msub&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mfrac&gt;
+    &lt;msub&gt;
+      &lt;mi&gt;S&lt;/mi&gt;
+      &lt;mi&gt;n&lt;/mi&gt;
+    &lt;/msub&gt;
+    &lt;mrow&gt;
+      &lt;munderover&gt;
+        &lt;mo&gt;&amp;#x2211;&lt;!-- &sum; --&gt;&lt;/mo&gt;
+        &lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;
+          &lt;mi&gt;i&lt;/mi&gt;
+          &lt;mo&gt;=&lt;/mo&gt;
+          &lt;mn&gt;1&lt;/mn&gt;
+        &lt;/mrow&gt;
+        &lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;
+          &lt;mn&gt;2&lt;/mn&gt;
+          &lt;mi&gt;N&lt;/mi&gt;
+          &lt;mo&gt;&amp;#x2212;&lt;!-- &minus; --&gt;&lt;/mo&gt;
+          &lt;mn&gt;1&lt;/mn&gt;
+        &lt;/mrow&gt;
+      &lt;/munderover&gt;
+      &lt;mrow&gt;
+        &lt;mo&gt;(&lt;/mo&gt;
+        &lt;mfrac&gt;
+          &lt;mn&gt;1&lt;/mn&gt;
+          &lt;mi&gt;i&lt;/mi&gt;
+        &lt;/mfrac&gt;
+        &lt;mo&gt;)&lt;/mo&gt;
+      &lt;/mrow&gt;
+    &lt;/mrow&gt;
+  &lt;/mfrac&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;,&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;S&lt;/mi&gt;
+    &lt;mi&gt;n&lt;/mi&gt;
+  &lt;/msub&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;t&lt;/mi&gt;
+  &lt;mi&gt;h&lt;/mi&gt;
+  &lt;mi&gt;e&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;n&lt;/mi&gt;
+  &lt;mi&gt;u&lt;/mi&gt;
+  &lt;mi&gt;m&lt;/mi&gt;
+  &lt;mi&gt;b&lt;/mi&gt;
+  &lt;mi&gt;e&lt;/mi&gt;
+  &lt;mi&gt;r&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;o&lt;/mi&gt;
+  &lt;mi&gt;f&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;S&lt;/mi&gt;
+  &lt;mi&gt;N&lt;/mi&gt;
+  &lt;mi&gt;P&lt;/mi&gt;
+  &lt;mi&gt;s&lt;/mi&gt;
+&lt;/math&gt;" /></p>
+<p><img class="equation_image" title="\pi\:=\:\sum^{Sn}_{i=1}\frac{2j_i\left(c_i-j_i\right)}{c_i\left(c_i-1\right)}" src="https://clemson.instructure.com/equation_images/%255Cpi%255C%253A%253D%255C%253A%255Csum%255E%257BSn%257D_%257Bi%253D1%257D%255Cfrac%257B2j_i%255Cleft%2528c_i-j_i%255Cright%2529%257D%257Bc_i%255Cleft%2528c_i-1%255Cright%2529%257D" alt="LaTeX: \pi\:=\:\sum^{Sn}_{i=1}\frac{2j_i\left(c_i-j_i\right)}{c_i\left(c_i-1\right)}" data-equation-content="\pi\:=\:\sum^{Sn}_{i=1}\frac{2j_i\left(c_i-j_i\right)}{c_i\left(c_i-1\right)}" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;&amp;#x03C0;&lt;!-- &pi; --&gt;&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;munderover&gt;
+    &lt;mo&gt;&amp;#x2211;&lt;!-- &sum; --&gt;&lt;/mo&gt;
+    &lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;
+      &lt;mi&gt;i&lt;/mi&gt;
+      &lt;mo&gt;=&lt;/mo&gt;
+      &lt;mn&gt;1&lt;/mn&gt;
+    &lt;/mrow&gt;
+    &lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;
+      &lt;mi&gt;S&lt;/mi&gt;
+      &lt;mi&gt;n&lt;/mi&gt;
+    &lt;/mrow&gt;
+  &lt;/munderover&gt;
+  &lt;mfrac&gt;
+    &lt;mrow&gt;
+      &lt;mn&gt;2&lt;/mn&gt;
+      &lt;msub&gt;
+        &lt;mi&gt;j&lt;/mi&gt;
+        &lt;mi&gt;i&lt;/mi&gt;
+      &lt;/msub&gt;
+      &lt;mrow&gt;
+        &lt;mo&gt;(&lt;/mo&gt;
+        &lt;mrow&gt;
+          &lt;msub&gt;
+            &lt;mi&gt;c&lt;/mi&gt;
+            &lt;mi&gt;i&lt;/mi&gt;
+          &lt;/msub&gt;
+          &lt;mo&gt;&amp;#x2212;&lt;!-- &minus; --&gt;&lt;/mo&gt;
+          &lt;msub&gt;
+            &lt;mi&gt;j&lt;/mi&gt;
+            &lt;mi&gt;i&lt;/mi&gt;
+          &lt;/msub&gt;
+        &lt;/mrow&gt;
+        &lt;mo&gt;)&lt;/mo&gt;
+      &lt;/mrow&gt;
+    &lt;/mrow&gt;
+    &lt;mrow&gt;
+      &lt;msub&gt;
+        &lt;mi&gt;c&lt;/mi&gt;
+        &lt;mi&gt;i&lt;/mi&gt;
+      &lt;/msub&gt;
+      &lt;mrow&gt;
+        &lt;mo&gt;(&lt;/mo&gt;
+        &lt;mrow&gt;
+          &lt;msub&gt;
+            &lt;mi&gt;c&lt;/mi&gt;
+            &lt;mi&gt;i&lt;/mi&gt;
+          &lt;/msub&gt;
+          &lt;mo&gt;&amp;#x2212;&lt;!-- &minus; --&gt;&lt;/mo&gt;
+          &lt;mn&gt;1&lt;/mn&gt;
+        &lt;/mrow&gt;
+        &lt;mo&gt;)&lt;/mo&gt;
+      &lt;/mrow&gt;
+    &lt;/mrow&gt;
+  &lt;/mfrac&gt;
+&lt;/math&gt;" /></p>
+<p>&nbsp;<img class="equation_image" title="where\:c_i=num.\:chrom.\:at\:the\:i^{th}\:SNP\:\left(i.e.\:2N\right)" src="https://clemson.instructure.com/equation_images/where%255C%253Ac_i%253Dnum.%255C%253Achrom.%255C%253Aat%255C%253Athe%255C%253Ai%255E%257Bth%257D%255C%253ASNP%255C%253A%255Cleft%2528i.e.%255C%253A2N%255Cright%2529" alt="LaTeX: where\:c_i=num.\:chrom.\:at\:the\:i^{th}\:SNP\:\left(i.e.\:2N\right)" data-equation-content="where\:c_i=num.\:chrom.\:at\:the\:i^{th}\:SNP\:\left(i.e.\:2N\right)" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;w&lt;/mi&gt;
+  &lt;mi&gt;h&lt;/mi&gt;
+  &lt;mi&gt;e&lt;/mi&gt;
+  &lt;mi&gt;r&lt;/mi&gt;
+  &lt;mi&gt;e&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;c&lt;/mi&gt;
+    &lt;mi&gt;i&lt;/mi&gt;
+  &lt;/msub&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mi&gt;n&lt;/mi&gt;
+  &lt;mi&gt;u&lt;/mi&gt;
+  &lt;mi&gt;m&lt;/mi&gt;
+  &lt;mo&gt;.&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;c&lt;/mi&gt;
+  &lt;mi&gt;h&lt;/mi&gt;
+  &lt;mi&gt;r&lt;/mi&gt;
+  &lt;mi&gt;o&lt;/mi&gt;
+  &lt;mi&gt;m&lt;/mi&gt;
+  &lt;mo&gt;.&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;a&lt;/mi&gt;
+  &lt;mi&gt;t&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;t&lt;/mi&gt;
+  &lt;mi&gt;h&lt;/mi&gt;
+  &lt;mi&gt;e&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;msup&gt;
+    &lt;mi&gt;i&lt;/mi&gt;
+    &lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;
+      &lt;mi&gt;t&lt;/mi&gt;
+      &lt;mi&gt;h&lt;/mi&gt;
+    &lt;/mrow&gt;
+  &lt;/msup&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;S&lt;/mi&gt;
+  &lt;mi&gt;N&lt;/mi&gt;
+  &lt;mi&gt;P&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mrow&gt;
+    &lt;mo&gt;(&lt;/mo&gt;
+    &lt;mrow&gt;
+      &lt;mi&gt;i&lt;/mi&gt;
+      &lt;mo&gt;.&lt;/mo&gt;
+      &lt;mi&gt;e&lt;/mi&gt;
+      &lt;mo&gt;.&lt;/mo&gt;
+      &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+      &lt;mn&gt;2&lt;/mn&gt;
+      &lt;mi&gt;N&lt;/mi&gt;
+    &lt;/mrow&gt;
+    &lt;mo&gt;)&lt;/mo&gt;
+  &lt;/mrow&gt;
+&lt;/math&gt;" />&nbsp;and&nbsp;<img class="equation_image" title="j_i=num.\:derived\:alleles\:at\:the\:i^{th}\:SNP" src="https://clemson.instructure.com/equation_images/j_i%253Dnum.%255C%253Aderived%255C%253Aalleles%255C%253Aat%255C%253Athe%255C%253Ai%255E%257Bth%257D%255C%253ASNP" alt="LaTeX: j_i=num.\:derived\:alleles\:at\:the\:i^{th}\:SNP" data-equation-content="j_i=num.\:derived\:alleles\:at\:the\:i^{th}\:SNP" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;j&lt;/mi&gt;
+    &lt;mi&gt;i&lt;/mi&gt;
+  &lt;/msub&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mi&gt;n&lt;/mi&gt;
+  &lt;mi&gt;u&lt;/mi&gt;
+  &lt;mi&gt;m&lt;/mi&gt;
+  &lt;mo&gt;.&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;d&lt;/mi&gt;
+  &lt;mi&gt;e&lt;/mi&gt;
+  &lt;mi&gt;r&lt;/mi&gt;
+  &lt;mi&gt;i&lt;/mi&gt;
+  &lt;mi&gt;v&lt;/mi&gt;
+  &lt;mi&gt;e&lt;/mi&gt;
+  &lt;mi&gt;d&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;a&lt;/mi&gt;
+  &lt;mi&gt;l&lt;/mi&gt;
+  &lt;mi&gt;l&lt;/mi&gt;
+  &lt;mi&gt;e&lt;/mi&gt;
+  &lt;mi&gt;l&lt;/mi&gt;
+  &lt;mi&gt;e&lt;/mi&gt;
+  &lt;mi&gt;s&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;a&lt;/mi&gt;
+  &lt;mi&gt;t&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;t&lt;/mi&gt;
+  &lt;mi&gt;h&lt;/mi&gt;
+  &lt;mi&gt;e&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;msup&gt;
+    &lt;mi&gt;i&lt;/mi&gt;
+    &lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;
+      &lt;mi&gt;t&lt;/mi&gt;
+      &lt;mi&gt;h&lt;/mi&gt;
+    &lt;/mrow&gt;
+  &lt;/msup&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;S&lt;/mi&gt;
+  &lt;mi&gt;N&lt;/mi&gt;
+  &lt;mi&gt;P&lt;/mi&gt;
+&lt;/math&gt;" /></p>
+<p>I've also added some new functions to the <a title="R-functions" href="https://clemson.instructure.com/courses/34867/pages/r-functions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/r-functions" data-api-returntype="Page">CompGen17_fxns.R file</a>, which you may feel free to use:</p>
+<pre><code>waterson.theta(w, perBP=TRUE)
+pi.diversity(w, perBP=TRUE)
+</code></pre>
+<p>In both functions <code>w</code> refers to any <strong>subset</strong> of a vcf data frame (so "w" stands for "window" here). By default, they will calculate a <span style="text-decoration: underline;">per base pair rate</span> of each statistic, BUT, they assume that there is no missing data. Since we might have missing data, set <code>perBP=FALSE</code> when you run the function, and then use the counts of <code>NumBP</code> that we calculated above to get your own per base pair rate.</p>
+<p>Or, you can just use the exact same code you had 2 weeks ago!</p>
+<h3 id="calculatenucleotidedivergencedxy">Calculate Nucleotide Divergence (D<sub>xy</sub>)</h3>
+<p>We're doing one (slightly) new statistic this week, called D<sub>xy</sub>. This is sometimes called <img class="equation_image" title="\pi_{XY}" src="https://clemson.instructure.com/equation_images/%255Cpi_%257BXY%257D" alt="LaTeX: \pi_{XY}" data-equation-content="\pi_{XY}" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03C0;&lt;!-- &pi; --&gt;&lt;/mi&gt;
+    &lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;
+      &lt;mi&gt;X&lt;/mi&gt;
+      &lt;mi&gt;Y&lt;/mi&gt;
+    &lt;/mrow&gt;
+  &lt;/msub&gt;
+&lt;/math&gt;" />, because it is the same as the <img class="equation_image" title="\pi" src="https://clemson.instructure.com/equation_images/%255Cpi" alt="LaTeX: \pi" data-equation-content="\pi" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;&amp;#x03C0;&lt;!-- &pi; --&gt;&lt;/mi&gt;
+&lt;/math&gt;" />&nbsp;calculation <em>except</em> that it only calculates the average number of differences between any pair of sequences taken from <strong>two different groups,</strong> rather than calculating the pairwise difference among all sequences.</p>
+<ol>
+<li>
+<p>Get 2 separate data frames: 1 for each subspecies in <code>my.data</code>. The two groups in this file are <em>H. mel. aglaope</em> and <em>H. mel. amaryllis.</em> The column names start with either "Ag" or "Am" to denote each subspecies.</p>
+<pre><code>colnames(my.data)[10:ncol(my.data)]
+[1] "Ag1" "Ag2" "Ag3" "Ag4" "Am1" "Am2" "Am3" "Am4"
+</code></pre>
+<p>Use the same strategy with <code>grep</code>, and then the <code>-</code> notation inside of the brackets that we used last week for the <a title="MK Hint: Get Brown Bear Allele Frequency" href="https://clemson.instructure.com/courses/34867/pages/mk-hint-get-brown-bear-allele-frequency" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/mk-hint-get-brown-bear-allele-frequency" data-api-returntype="Page">polar bears</a> and during the <a title="FST Solutions" href="https://clemson.instructure.com/courses/34867/pages/fst-solutions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/fst-solutions" data-api-returntype="Page">F<sub>ST</sub> exercises</a>.</p>
+</li>
+<li>
+<p>Set up an empty column for "Dxy" in your Results table. I've written a function in <a title="R-functions" href="https://clemson.instructure.com/courses/34867/pages/r-functions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/r-functions" data-api-returntype="Page">CompGen17_fxns.R</a> to help you with the actual calculation:</p>
+<pre><code>dxy(vcf1,vcf2, perBP=FALSE)
+</code></pre>
+<p><code>vcf1</code> and <code>vcf2</code> are the 2 data frames for your 2 groups (or in this case, they will be the subsets of those data frames in each window.)</p>
+<p>Write a loop to go through your Windows one more time, and use the function to calculate D<sub>xy</sub> for each window. Make sure to divide your result by <code>NumBP</code> to get the per base pair rate for the final result.</p>
+</li>
+</ol>
+<h3 id="timetomakeaplot">Time to Make a Plot!</h3>
+<p>When you want to plot multiple statistics together, you have a lot of options for how best to display them so that the result is actually informative. Today, we'll make a somewhat complex plot, to give you some ideas about various options.</p>
+<h4 id="1createanemptyplotwithextramargins">1. Create an empty plot, with extra margins</h4>
+<p>The first consideration for us with these statistics is the fact that while <img class="equation_image" title="\theta_W\:,\:\pi\:,\:and\:D_{XY}" src="https://clemson.instructure.com/equation_images/%255Ctheta_W%255C%253A%252C%255C%253A%255Cpi%255C%253A%252C%255C%253Aand%255C%253AD_%257BXY%257D" alt="LaTeX: \theta_W\:,\:\pi\:,\:and\:D_{XY}" data-equation-content="\theta_W\:,\:\pi\:,\:and\:D_{XY}" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;W&lt;/mi&gt;
+  &lt;/msub&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;,&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;&amp;#x03C0;&lt;!-- &pi; --&gt;&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;,&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;a&lt;/mi&gt;
+  &lt;mi&gt;n&lt;/mi&gt;
+  &lt;mi&gt;d&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;D&lt;/mi&gt;
+    &lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;
+      &lt;mi&gt;X&lt;/mi&gt;
+      &lt;mi&gt;Y&lt;/mi&gt;
+    &lt;/mrow&gt;
+  &lt;/msub&gt;
+&lt;/math&gt;" />&nbsp;are all rates per base pair, Tajima's D is scaled completely differently, so we actually want to use 2 different axes to get it onto the same plot.&nbsp;I first set up an <strong>empty</strong> plot, and allow myself some extra room on the margins to draw in another axis later:</p>
+<pre><code> par(mar=c(5,5,2,5))
+ plot(my.results$Start, my.results$Theta, type="n",
+     xlab="Position",
+     ylab=expression(paste("Population Mutation Rate (", theta[W], " &amp; ", pi, ")")), ylim=c(-0.054,0.07))
+</code></pre>
+<p>You'll probably notice that my y-axis limits here seem very specific, and you'll wonder how I figured that out. A lot of it is trial and error (unfortunately), but I also use the <code>quantile</code> function sometimes to&nbsp;help know where my data points will be for a certain statistic:</p>
+<pre><code>quantile(my.results$Dxy, na.rm=TRUE)
+        0%          25%          50%          75%         100% 
+0.0004807692 0.0058791244 0.0104398961 0.0202904595 0.0541867677 
+</code></pre>
+<h4 id="2plotthetawasfilledinshape">2. Plot <img class="equation_image" title="\theta_W" src="https://clemson.instructure.com/equation_images/%255Ctheta_W" alt="LaTeX: \theta_W" data-equation-content="\theta_W" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;W&lt;/mi&gt;
+  &lt;/msub&gt;
+&lt;/math&gt;" />&nbsp;as a filled in shape</h4>
+<p>Instead of plotting&nbsp;<img class="equation_image" title="\theta_W" src="https://clemson.instructure.com/equation_images/%255Ctheta_W" alt="LaTeX: \theta_W" data-equation-content="\theta_W" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;W&lt;/mi&gt;
+  &lt;/msub&gt;
+&lt;/math&gt;" />&nbsp;as a line, I'm going to make it a filled in shape:</p>
+<pre><code>polygon(c(my.results$Start[1], my.results$Start, my.results$Start[nrow(my.results)]),
+    c(0, my.results$Theta, 0), col=rgb(0.545,0,0, alpha=0.99), border=NA)
+</code></pre>
+<h4 id="3plotpiasanothersemitransparentshape">3. Plot <img class="equation_image" title="\pi" src="https://clemson.instructure.com/equation_images/%255Cpi" alt="LaTeX: \pi" data-equation-content="\pi" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;&amp;#x03C0;&lt;!-- &pi; --&gt;&lt;/mi&gt;
+&lt;/math&gt;" />&nbsp;as another, semi-transparent shape</h4>
+<p>To see how <img class="equation_image" title="\pi" src="https://clemson.instructure.com/equation_images/%255Cpi" alt="LaTeX: \pi" data-equation-content="\pi" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;&amp;#x03C0;&lt;!-- &pi; --&gt;&lt;/mi&gt;
+&lt;/math&gt;" />&nbsp;compares to <img class="equation_image" title="\theta_W" src="https://clemson.instructure.com/equation_images/%255Ctheta_W" alt="LaTeX: \theta_W" data-equation-content="\theta_W" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;W&lt;/mi&gt;
+  &lt;/msub&gt;
+&lt;/math&gt;" />, I'm going to overlay it on top of the first shape, but make it semi-transparent with the <code>alpha</code> parameter. Where they overlap (i.e., they are the same), I should see the blended color, but where they are different, I'll see the distinct color. This helps me to see where they are really different (i.e. there are skews in the frequency spectrum!):</p>
+<pre><code>polygon(c(my.results$Start[1], my.results$Start, my.results$Start[nrow(my.results)]),
+    c(0, my.results$Pi, 0), col=rgb(0.933,0.705,0.133, alpha=0.6), border=NA)
+</code></pre>
+<h4 id="4addalinefordxy">4. Add a line for D<sub>xy</sub></h4>
+<p>I probably don't want to add any more solid shapes to this plot, so I'll make D<sub>xy</sub> a simple black line:</p>
+<pre><code>lines(my.results$Start, my.results$Dxy, col="black")
+</code></pre>
+<h4 id="5addtajimasd">5. Add Tajima's D</h4>
+<p>Here comes the part where we need to make a new axis. I start by calling <code>par(new=T)</code>, which tells R to re-set the plotting parameters (i.e. don't use the current scale). Then, I'll add the dotted line for Tajima's D, and finally I'll force R to put the new y-axis on the right instead of the left:</p>
+<pre><code>par(new=T)
+plot(my.results$Start, my.results$Tajima, type="l",
+       col="black", ylim=c(-1.5,2), lty=3, axes=F, xlab=NA, ylab=NA)
+axis(side=4)
+mtext(side=4, line=3, "Tajima's D")
+</code></pre>
+<h4 id="6addalegend">6. Add a legend</h4>
+<p>The last thing I do is add a legend to the upper right corner:</p>
+<pre><code>lgd &lt;- legend("topright", legend=c(expression(theta[W]), expression(Pi), expression(D[XY]), "Tajima's D"),
+          lty=c(NA,NA,1,3),
+          col=c(NA,NA,"black","black"), bty="n")
+legend(lgd$rect$left, lgd$rect$top, legend=c(NA,NA), pch=c(22,22),
+          fill=c(rgb(0.545,0,0,alpha=0.99),
+          rgb(0.933,0.705,0.133,alpha=0.6)), border=NA, bty="n",
+          col=NA)
+</code></pre>
+<p>Here's the final plot:&nbsp;</p>
+<p>&nbsp;<img src="https://clemson.instructure.com/courses/34867/files/2193754/preview" alt="dxy_plot.png" width="800" height="481" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2193754" data-api-returntype="File" /></p>
+<h2 id="chooseyourownadventure">Choose Your Own Adventure</h2>
+<p>For the last part of the exercise, I want you to pick the <strong>statistic of your choice</strong>, to try out on this data set in order to test for further evidence of either balancing selection, directional selection, or some other phenomenon.</p>
+<p>Statistics that we've covered in class exercises:&nbsp;</p>
+<ol>
+<li><a title="HWE Solutions" href="https://clemson.instructure.com/courses/34867/pages/hwe-solutions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/hwe-solutions" data-api-returntype="Page">Expected Heterozygosity and Observed Heterozygosity</a></li>
+<li><a title="FST Solutions" href="https://clemson.instructure.com/courses/34867/pages/fst-solutions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/fst-solutions" data-api-returntype="Page">F<sub>ST</sub></a></li>
+<li><span style="color: #993300;">Linkage Disequilibrium (not recommended-since we don't have phased data here)</span></li>
+<li><a title="Allele Freq Spectrum SOLUTIONS" href="https://clemson.instructure.com/courses/34867/pages/allele-freq-spectrum-solutions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/allele-freq-spectrum-solutions" data-api-returntype="Page">Allele Frequency Spectrums (the histograms)</a></li>
+<li>Waterson's Theta, Pi, and Tajima's D (what we just did)</li>
+<li>McDonald-Kreitman Test (not recommended here - not enough divergence, BUT you could look at <a title="McDonald-Kreitman Exercises" href="https://clemson.instructure.com/courses/34867/pages/mcdonald-kreitman-exercises" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/mcdonald-kreitman-exercises" data-api-returntype="Page">VariantAnnotation</a> - the <a class="instructure_file_link" title="Hmel218003.gff" href="https://clemson.instructure.com/courses/34867/files/2207066/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2207066" data-api-returntype="File">gff3</a> and <a class="instructure_file_link" title="Hmel218003.fa" href="https://clemson.instructure.com/courses/34867/files/2193751/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2193751" data-api-returntype="File">fa files</a> are here)</li>
+</ol>
+<p>Statistics I've mentioned, and have now added functions/instructions for:</p>
+<ol>
+<li>Fu and Li's D and F statistics
+<ul>
+<li>Very similar to Tajima's D, but modified to compare&nbsp;<strong>derived</strong> site frequencies instead of just minor allele frequencies (i.e. unfolded spectrum vs. folded).&nbsp;&nbsp;This gives them more power to distinguish positive selection from negative selection.</li>
+</ul>
+</li>
+<li>Fay and Wu's H
+<ul>
+<li>Another variant of Tajima's D that uses derived sites; this test&nbsp;looks for skews towards very high frequency derived variants (excellent method for finding selective sweeps).</li>
+</ul>
+</li>
+<li>HKA
+<ul>
+<li>Discussed during the M-K Test week; this test compares the rate of divergence between species to the rate of polymorphism within species, with the expectation that under neutrality the ratio of these rates will be the same at any one locus, even if it differs across loci because of variation in mutation rate.</li>
+</ul>
+</li>
+<li>KaKs Ratio <span style="color: #ff0000;">(I still need to upload code for this!)</span>
+<ul>
+<li>Also discussed during M-K Test week; this test examines the rate of non-synonymous polymorphism&nbsp; versus synonymous polymorphism within a single gene.&nbsp; Under neutrality, the ratio is expected to be 1; values &gt;1 indicate positive selection, values &lt;1 indicate negative/purifying selection.</li>
+</ul>
+</li>
+</ol>
+<p>For tests 1,2, and 3 above, I have found an existing R package called "sfsr" on github and modified it to make it compatible with VCF files.&nbsp; This package can calculate the Fu and Li tests, HKA, and I've also added a Fay and Wu H function to it.&nbsp; Instructions to download and use the package are on my <a href="https://github.com/eacooper400/sfsr/blob/master/Using_SFSR_w_VCF.md">GitHub page here</a>.</p>
+<p><strong>Ideas for what you might want to try could include, but are not limited to:</strong></p>
+<ul>
+<li><strong>Zooming in on a region that looks interesting, and calculating either a new statistic or even the same statistics in a different window size.</strong></li>
+<li><strong>Comparing one of the Tajima's D variants (Fu and Li, Fay and Wu) with the original Tajima'sD</strong></li>
+<li><strong>Performing a SNP by SNP calculation of something like Heterozygosity or Fst, and comparing this with the pattern seen in the windows</strong></li>
+<li><strong>Locating any nearby genes using the <a class="instructure_file_link" title="Hmel218003.gff" href="https://clemson.instructure.com/courses/34867/files/2207066/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2207066" data-api-returntype="File">gff3 file found here</a></strong></li>
+<li><strong>Annotating variants with the workflow we discussed last week to look at nonsynonymous vs. synonymous variation (you could also try KaKs)</strong></li>
+<li><strong>Trying a PCA, or even trying multiple PCAs using different genomic regions, to see if some are more structured that others..</strong></li>
+<li><strong>Whatever else you might think of!</strong></li>
+</ul>
+<p><span style="text-decoration: underline;"><strong>Here is a Nice Table of when to think about/use different Methods:</strong></span></p>
+<p><strong><img src="https://clemson.instructure.com/courses/34867/files/2207625/preview" alt="table_of_tests.jpg" width="800" height="459" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2207625" data-api-returntype="File" /></strong></p>

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>8900-R-tutorial</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/css/1-col-portfolio.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+  <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">R-Tutorial</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="/compGen8900.html">Gen-8900
+                <span class="sr-only">(current)</span>
+              </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/vcf.html">VCF-Exercises
+	        <span class="sr-only">(current)</span>
+	      </a>
+	    </li>
+	  </ul>
+	 </div>
+	</div>
+	</nav>
+
+	<!--Page Content-- >
+	<section id="r-exercises">
+	<div class="container">
+<h1 id="introductiontor">Introduction to R</h1>
+<h2 id="basicmathandstatisticalcalculations">Basic Math and Statistical Calculations</h2>
+<p>The simplest thing you can do with R is to use it as a calculator; R has a built-in capability of recognizing and performing any standard calculation (as well as more complicated ones). To get used to the command prompt environment, try out the various expressions below:</p>
+<pre><code>&gt;2+2
+[1] 4
+ &gt; 2*4
+[1] 8
+&gt; 2**4
+[1] 16
+</code></pre>
+<p>In each case, after you enter the command, the answer is returned on the next line. This is fine if you only need to get and see a result once, but for more complicated tasks, you will want to store results at each step so that you can use them in another function. To do this, you can assign <strong>variables</strong>, which are just names to represent values. Try the examples below:</p>
+<pre><code>&gt; x &lt;- 2
+&gt; y &lt;- x + x
+&gt; y
+[1] 4
+&gt; z &lt;- x**y
+&gt; z
+[1] 16
+
+&gt; total &lt;- sum(x,y,z)
+&gt; total
+[1] 22
+&gt; avg &lt;- total/3
+&gt; avg
+[1] 7.333333
+</code></pre>
+<h2 id="objectsanddatastructures">Objects and Data Structures</h2>
+<p>An <strong>object</strong> refers to anything that can be assigned to a variable. In the examples above, all of the &ldquo;objects&rdquo; were single values, but in R there are many more types of data and structures that can be assigned to a variable. For this tutorial, we will just be looking at the structures most likely to come up when anaylzing genetic data.</p>
+<h3 id="vectors">Vectors</h3>
+<p>A data vector is an array (list) of either numbers or character strings. It can be any length, and the most basic way to create one is with the <code>c(&hellip;)</code> construct. The lower case "c" stands for "concatenate," which can help you remember what a vector really is. Below we create 3 different vectors; 2 numeric and 1 with character strings:</p>
+<pre><code>&gt; vector1 &lt;- c(x,y,z)
+&gt; vector1
+[1]  2  4 16
+&gt; vector2 &lt;- c(10,9,20)
+&gt; vector2
+[1] 10  9 20
+&gt; vector3 &lt;- c("A", "B", "A")
+&gt; vector3
+[1] "A" "B" "A"
+</code></pre>
+<p>This construct is extremely useful because R can perform vectorized arithmetic, meaning that you can do calculations on sets of numbers instead of just individual ones:</p>
+<pre><code>&gt; vector1 + vector2
+[1] 12 13 36
+</code></pre>
+<p>We can also see how many things are in a given vector by checking its length:</p>
+<pre><code>&gt; length(vector1)
+[1] 3
+</code></pre>
+<p>Finally, we can add items to existing vectors by either concatenating them with the <code>c(...)</code> construct, or using the <code>append</code> command:</p>
+<pre><code>&gt; v4 = c(vector1, vector2, x)
+&gt; v4
+[1]  2  4 16 10  9 20  2
+
+&gt; v4 = append(v4, y)
+&gt; v4
+[1]  2  4 16 10  9 20  2  4
+</code></pre>
+<h3 id="matrices">Matrices</h3>
+<p>A matrix is a 2-dimensional array of numbers (the same as any mathematical definition). Note that a matrix can take character values as well, but CANNOT be a mix of data types. Matrices can be created from a single vector using the <code>matrix</code> function. In the example below, we create a combined vector from 2 we have already generated, then convert them into a matrix:</p>
+<pre><code>&gt;comb.vector &lt;- c(vector1,vector2)
+&gt;matrix(comb.vector, nrow=3, byrow=FALSE)
+    [,1] [,2]
+[1,]    2   10
+[2,]    4    9
+[3,]   16   20
+</code></pre>
+<p>You will also notice at this point that the general structure for R commands is to have the name of the function you want to perform typed first, and then in parentheses you give all of the arguments and/or options for that function. Some functions only take input data as the argument, such as the <code>c(...)</code> command to create a vector, while other more complex functions can take many arguments. To see what arguments a function needs, you can use <code>?</code> followed by the function name to get a help page:</p>
+<pre><code>?matrix
+</code></pre>
+<h3 id="factors">Factors</h3>
+<p>Factors are categorical variables that are useful in many statistical analyses where data needs to be subdivided into groups (e.g. ANOVA). To see what the factor data structure looks like, let&rsquo;s convert our character vector to a factor:</p>
+<pre><code>&gt; factor1 &lt;- as.factor(vector3)
+&gt; factor1
+[1] A B A
+Levels: A B
+</code></pre>
+<p>Notice that this data structure is slightly more complicated in that it has 2 components: the original vector of 3 characters, and then a set of &ldquo;levels&rdquo; that lists the possible categories. We can extract the levels by themselves, which will return a vector with 2 characters:</p>
+<pre><code>&gt; levels(factor1)
+[1] "A" "B"
+</code></pre>
+<p>In this class, we won't be using factors much, BUT you will discover that when R sees tables with a mix of numbers and characters (such as almost all genetic data tables), it will almost always try and make them a factor by default, even when you really dont' want it to. For this reason, it's good to be aware of factors, and also how to convert them back to vectors:</p>
+<pre><code>&gt; as.vector(factor1, mode="character")
+[1] "A" "B" "A"
+&gt; vector4=as.vector(factor1, mode="numeric")
+&gt; vector4
+[1] 1 2 1
+</code></pre>
+<p>If you are unsure of what type of data object something is (i.e. you read something into R, and you're not sure how it assigned it), you can check the structure of the object:</p>
+<pre><code>&gt; str(vector4)
+num [1:3] 1 2 1
+&gt; str(factor1)
+Factor w/ 2 levels "A","B": 1 2 1
+</code></pre>
+<p>A lot of times when you get frustrating errors for a function you know should work, it is because the data structure is of the wrong type, so checking this is a good way to troubleshoot! R has commands for converting to pretty much any data types, such as <code>as.data.frame(..)
+as.factor(...) as.matrix(...) as.character(...)</code> etc.</p>
+<h3 id="lists">Lists</h3>
+<p>A list is a collection of data objects, and can be used to combine multiple types of data structures into one variable. For example, we can make a list containing our character vector, our numerical matrix, and a single numerical value:</p>
+<pre><code>&gt; list1 = list(vector3, matrix(comb.vector, nrow=3, byrow=FALSE), avg)
+&gt; list1
+    [[1]]
+[1] "A" "B" "A"
+
+[[2]]
+    [,1] [,2]
+[1,]    2   10
+[2,]    4    9
+[3,]   16   20
+
+[[3]]
+[1] 7.333333
+</code></pre>
+<p>Note that many of the more complex data packages and analyses return their results as lists (although we won&rsquo;t use lists much for this class).</p>
+<h3 id="dataframes">Data Frames</h3>
+<p>A data frame is a table that can be made up of vectors and/or factors of the same length. Like any table in Excel, the data should be related across columns, such that each row corresponds to one individual/experimental unit. For SNP data, the row usually corresponds to 1 position. As an example, we can make a table out of our 3 vectors:</p>
+<pre><code>&gt; d.1 &lt;- data.frame(vector1,vector2,vector4)
+&gt; d.1
+vector1 vector2 vector4
+1       2      10       1
+2       4       9       2
+3      16      20       1
+</code></pre>
+<p>We can rename the rows or columns of the data frame however we want (this is true for matrices as well):</p>
+<pre><code>&gt; rownames(d.1)=c("Pos1", "Pos2", "Pos3")
+&gt; colnames(d.1)=c("Sample1", "Sample2", "Sample3")
+&gt; d.1
+    Sample1 Sample2 Sample3
+Pos1       2      10       1
+Pos2       4       9       2
+Pos3      16      20       1
+</code></pre>
+<p>We can also add onto an existing data frame, either by columns or by rows:</p>
+<pre><code>&gt; Sample4=c(25, 21, 13)
+&gt; d.1=cbind(d.1,Sample4)
+&gt; d.1
+    Sample1 Sample2 Sample3 Sample4
+Pos1       2      10       1      25
+Pos2       4       9       2      21
+Pos3      16      20       1      13
+
+&gt; Pos4=c(25,21,6,11)
+&gt; d.1=rbind(d.1,Pos4)
+&gt; d.1
+    Sample1 Sample2 Sample3 Sample4
+Pos1       2      10       1      25
+Pos2       4       9       2      21
+Pos3      16      20       1      13
+4         25      21       6      11
+</code></pre>
+<p>Note that R automatically uses vector names for columns in a dataframe, but does not do this for row names. Also, as a general rule, <code>cbind(...)</code> tends to "behave" better than <code>rbind(...)</code> (i.e. it recognizes and preserves data types more consistently).</p>
+<p>We can get information about the size of a data frame with commands such as <code>dim(...)</code>, <code>nrow(...)</code>, and <code>ncol(...)</code>:</p>
+<pre><code>&gt; dim(d.1)
+[1] 3 4
+&gt; nrow(d.1)
+[1] 3
+&gt; ncol(d.1)
+[1] 4
+</code></pre>
+<h2 id="plotting">Plotting</h2>
+<p>One of the reasons R is so popular among biologists is because of its powerful and flexible plotting functions. We will not get into any advanced plotting in this class, but we will be doing a few different types of plots as part of each exercise in the coming weeks. Below is the very basic command line for making a scatter plot in R:</p>
+<pre><code>plot(d.1$Sample1, d.1$Sample2, xlab="Sample1", ylab="Sample2", \
+    main="Test Scatterplot", pch=20, col="red")
+</code></pre>
+<p>Notice the <code>$</code> notation used to select just the first 2 columns of the data frame; we'll discuss subsetting data objects in R in more detail below.</p>
+<h2 id="manipulatingdatastructures">Manipulating Data Structures</h2>
+<h3 id="indexingvectors">Indexing Vectors</h3>
+<p>In the vectors we made above, there are 3 elements of each array, and R automatically keeps track of which is the 1st, 2nd, and 3rd element. This means that we can easily select just 1, or a subset of the elements using the <strong>index</strong>:</p>
+<pre><code>&gt; vector1[2]
+[1] 4
+&gt; vector2[c(1,3)]
+[1] 10 20
+</code></pre>
+<p>You can also tell R to exclude specific elements, like so:</p>
+<pre><code>&gt; vector1[-2]
+[1]  2 16
+</code></pre>
+<p>Finally, you can do what is known as conditional indexing, which means that you are finding the subset of data that meets a certain criteria. Below, we will get the elements of vector 1 that are greater than or equal to 10:</p>
+<pre><code>&gt; vector1[vector1&gt;=10]
+[1] 16
+</code></pre>
+<p>Try typing in the code that is just in the brackets, and look at what value is returned.</p>
+<pre><code>&gt; vector1&gt;=10
+[1] FALSE FALSE  TRUE
+</code></pre>
+<p>Now try typing the next line and see what gets returned (this should help see how indexing behaves):</p>
+<pre><code>&gt; which(vector1&gt;=10)
+[1] 3
+</code></pre>
+<h3 id="subsettingotherdatastructures">Subsetting Other Data Structures</h3>
+<p>Selecting values from data frames and matrices (and even lists, although they are a bit more complicated) follows the same sort of procedure. The key difference is that to get a single value, you need to specify both the row and the column number of the index:</p>
+<pre><code>&gt; d.1[3,2]
+[1] 20
+</code></pre>
+<p>To get a single column but all of the row values, there are 2 options:</p>
+<pre><code>&gt; d.1[,2]
+[1] 10  9 20 21
+&gt; d.1$Sample2
+[1] 10  9 20 21
+</code></pre>
+<p>Conditional selection in data frames and matrices is also very similar to the process in vectors:</p>
+<pre><code>&gt; d.2=subset(d.1, d.1$Sample2&gt;=10)
+&gt; d.2
+    Sample1 Sample2 Sample3 Sample4
+Pos1       2      10       1      25
+Pos3      16      20       1      13
+4         25      21       6      11
+</code></pre>
+<p>You can also combine the selecting functions with variable assignment, to replace specific values in a data object. Let's replace everything less than 10 with an value:</p>
+<pre><code>&gt; d.2[d.2&lt;10]=NA
+&gt; d.2
+    Sample1 Sample2 Sample3 Sample4
+Pos1      NA      10      NA      25
+Pos3      16      20      NA      13
+4         25      21      NA      11
+</code></pre>
+<p>Similarly, let's say we want to go back and replace all of the NA values with "-9" (a common placeholder for missing data in SNP files):</p>
+<pre><code>&gt; d.2[is.na(d.2)]=(-9)
+&gt; d.2
+    Sample1 Sample2 Sample3 Sample4
+Pos1      -9      10      -9      25
+Pos3      16      20      -9      13
+4         25      21      -9      11
+</code></pre>
+<p>We can also use the <code>which</code> function with data frames:</p>
+<pre><code>&gt; d.2[which(d.2$Sample1&lt;0),]
+    Sample1 Sample2 Sample3 Sample4
+Pos1      -9      10      -9      25
+</code></pre>
+<h2 id="manipulatingtextandcharacterdatainr">Manipulating Text and Character data in R</h2>
+<p>Matching and subsetting on character vectors is a bit trickier in R, but it will be key for working with SNP data. A handy function for this is <code>grep</code>:</p>
+<pre><code>&gt; grep("A", vector3)
+[1] 1 3
+</code></pre>
+<p>For <code>grep</code>, we first list the pattern we want to search for, followed by the data object we want to search in.</p>
+<p>Notice that by itself, grep is returning the indices, not the actual values (like which), so to subset we would do:</p>
+<pre><code>&gt; vector3[grep("A", vector3)]
+[1] "A" "A"
+</code></pre>
+<p>We can go a step further and do a "search and replace" on a text string with the <code>gsub</code> function:</p>
+<pre><code>&gt; gsub("A", "T", vector3)
+[1] "T" "B" "T"
+</code></pre>
+<p><code>gsub</code> takes the pattern you are searching for as the first argument (just like <code>grep</code> does), and then the second argument is what you want to replace it with. The third argument is the data object where you want to do the search and replace.</p>
+<h2 id="wildcardsandspecialcharacters">Wildcards and Special Characters</h2>
+<p>The name of the function <code>grep</code> actually comes from Get Regular ExPression. A regular expression is any sequence of characters that define a search pattern; they could be the exact word/string you are looking for, OR they can contain special characters that let you search for more flexible matches.</p>
+<p>First, let's create a vector with several words, rather than just single letters:</p>
+<pre><code>&gt; vector5=c("apple", "maple", "apple4", "apricot8")
+</code></pre>
+<p>If I search for the word "apple", I will get 2 results, because 2 words contain this "pattern":</p>
+<pre><code>&gt; grep("apple", vector5)
+[1] 1 3
+</code></pre>
+<p>If I want an exact match for the word apple (i.e. I don't want to get "apple4"), I can use the special character <code>^</code>, which specifies that the pattern MUST be at the beginning of a word, and the special character <code>$</code>, which specifies that the pattern must be at the end:</p>
+<pre><code>&gt; grep("^apple$", vector5)
+[1] 1
+</code></pre>
+<p>To look more at how <code>^</code> works, let's try searching for the pattern "ap" with and without it. With the <code>^</code>, we should get 3 results, for the 3 words that start with "ap." Without it, we will get all 4 words:</p>
+<pre><code>&gt; grep("^ap", vector5)
+[1] 1 3 4
+&gt; grep("ap", vector5)
+[1] 1 2 3 4
+</code></pre>
+<p>We can also be even more general. The <code>*</code> character is the wildcard, which means it can match anything:</p>
+<pre><code>&gt; grep("*", vector5)
+[1] 1 2 3 4
+</code></pre>
+<p>One last example: to match the 2 words that end in a number, we will use the notation <code>[0-9]$</code> to indicate any digit between 0 and 9 at the end of a word:</p>
+<pre><code>&gt; grep("[0-9]$", vector5)
+[1] 3 4
+</code></pre>
+<p>The full list of R special characters is <code>$ * + . ? [ ] ^ { } | ( ) \</code> . We will see more in the weeks to come. If you want to read up on the details, a good webiste can be found <a href="http://stat545.com/block022_regular-expression.html">here</a>. <code>gsub</code> uses regular expressions and wild cards the same way that <code>grep</code> does.</p>
+<h2 id="simpleprogrammingwithloops">Simple Programming with Loops</h2>
+<p>A key aspect of a programming language like R is the ability to use looping constructs. These allow certain tasks or series of tasks to be iterated over a large data set (or some set of conditions). Loops are not necessarily the fastest method of programming, BUT they are very intuitive when you first start, and using loops helps you understand how to divide jobs into a task to run on each piece of a file, so we will see them a lot in this class.</p>
+<p>There are several types of loops:</p>
+<ol>
+<li>
+<p>If Loop:</p>
+<pre><code>if (p&lt;0.05) {
+print("Hooray!")
+}
+</code></pre>
+</li>
+<li>
+<p>If/Else:</p>
+<pre><code>if (p&lt;0.05) {
+print("Hooray")} else {
+print("Boooo!")
+}
+</code></pre>
+</li>
+<li>
+<p>For:</p>
+<pre><code>for (i in 1:10) {
+print(i)
+}
+</code></pre>
+</li>
+<li>
+<p>While:</p>
+<pre><code>i=1
+while (i &lt; 10) {
+print(i)
+i=(i+1)
+}
+</code></pre>
+</li>
+</ol>
+<p>In this class we will largely be using <code>for</code> loops. These will iterate over a list, which in genetics typically corresponds to either a set of positions or a set of individuals.</p>
+<p>For a simple test of a loop, let's start with one that goes through every row of our data frame <code>d.1</code> and gets the sum each time:</p>
+<pre><code>&gt; for (i in 1:nrow(d.1)) {
++ total=sum(d.1[i,])
++ print(total)
++ }
+[1] 38
+[1] 36
+[1] 50
+[1] 63
+</code></pre>
+<p>An important thing to remember about loops is that the variables you define inside of them get overwritten with every iteration. Notice that if we check what the variable <code>total</code> is after running the loop, we only get the very last value:</p>
+<pre><code>&gt; total
+[1] 63
+</code></pre>
+<p>To save all of the results (which we obviously want to do most of the time), we need to first create a variable outside of the loop before starting it, and then add each of our calculated values to it as we go:</p>
+<pre><code>&gt; saved.totals=c()
+&gt; for (i in 1:nrow(d.1)) {
++ total=sum(d.1[i,])
++ saved.totals=append(saved.totals,total)
++ print(saved.totals)
++ print(total)
++ }
+[1] 38
+[1] 38
+[1] 38 36
+[1] 36
+[1] 38 36 50
+[1] 50
+[1] 38 36 50 63
+[1] 63
+</code></pre>
+<p>An alternative (and slightly more memory efficient) way of saving the results would be to create a column of zeros in our existing data frame, and then replace the zero value with the new value each time:</p>
+<pre><code>&gt; Total=c(0,0,0,0)
+&gt; d.1=cbind(d.1,Total)
+&gt; d.1
+    Sample1 Sample2 Sample3 Sample4 Total
+Pos1       2      10       1      25     0
+Pos2       4       9       2      21     0
+Pos3      16      20       1      13     0
+4         25      21       6      11     0
+&gt; for (i in 1:nrow(d.1)) {
++ total=sum(d.1[i,1:4])
++ d.1[i,5]=total
++ print(d.1)
++ }
+  Sample1 Sample2 Sample3 Sample4 Total
+Pos1       2      10       1      25    38
+Pos2       4       9       2      21     0
+Pos3      16      20       1      13     0
+4         25      21       6      11     0
+Sample1 Sample2 Sample3 Sample4 Total
+Pos1       2      10       1      25    38
+Pos2       4       9       2      21    36
+Pos3      16      20       1      13     0
+4         25      21       6      11     0
+    Sample1 Sample2 Sample3 Sample4 Total
+Pos1       2      10       1      25    38
+Pos2       4       9       2      21    36
+Pos3      16      20       1      13    50
+4         25      21       6      11     0
+    Sample1 Sample2 Sample3 Sample4 Total
+Pos1       2      10       1      25    38
+Pos2       4       9       2      21    36
+Pos3      16      20       1      13    50
+4         25      21       6      11    63
+</code></pre>
+<p>Finally, let's look at a more complicated example, where we actually nest an <code>if</code> loop inside of our <code>for</code> loop. For this test, we will write a loop that gives us the <em>sum</em> of Sample1 and Sample2 <strong>if</strong> Sample 4 is greater than 20, and gives us their difference if Sample 4 is less than or equal to 20.</p>
+<pre><code>&gt; Check=rep(0,4)
+&gt; d.1=cbind(d.1, Check)
+&gt; for (i in 1:nrow(d.1)) {
++ if (d.1[i,4]&gt;20) {
++ d.1[i,6] = d.1[i,1] + d.1[i,2]
++ } else {
++ d.1[i,6] = d.1[i,1] - d.1[i,2]
++ }
++ }
+&gt; d.1
+    Sample1 Sample2 Sample3 Sample4 Total Check
+Pos1       2      10       1      25    38    12
+Pos2       4       9       2      21    36    13
+Pos3      16      20       1      13    50    -4
+4         25      21       6      11    63     4
+</code></pre>
+<h2 id="creatingfunctions">Creating Functions</h2>
+<p>So far, we have been using R&rsquo;s built-in functions (e.g. sum, subset, etc.), and while R has existing functions for a lot of things, there are times when you may still want to write your own function (especially for genomics tasks). It is not necessary to write functions in order to be able to write R programs (you can still get everything done by writing loops and regular code), BUT as you start using R more, you will find that functions are very useful ways to save your code in re-usable "chunks." They also make your scripts more concise and easier to read, and finally, any external R packages you use are actually just a collection of new functions that someone wrote (so understanding how to read the code for them is helpful).</p>
+<p>We'll start with something really simple: let's pretend that R doesn't already have a <code>mean</code> function, and let's write one of our own:</p>
+<pre><code>&gt; new.mean = function(x) {
++ y=sum(x)
++ z=y/(length(x))
++ return(z)
++ }
+</code></pre>
+<p>The first line of the above code says that <code>new.mean</code> is going to be a function (rather than a variable), and this function is going to require a single input argument (x). The next 2 lines are showing what this function is going to do with the variable <code>x</code>: first it will get the sum, then it will divide by the length of the vector. The last command, <code>return</code> specifies that the function should send back that final value to the user, whenever the function is called.</p>
+<p>When we type in the code above, it looks like nothing has happened. What has in fact happened is that we have defined the function, but we have not run it yet. To try a run with it, we can do:</p>
+<pre><code>&gt; test=new.mean(d.1$Sample1)
+&gt; test
+[1] 11.75
+
+test2=new.mean(d.1$Sample2)
+test2
+[1] 15
+</code></pre>
+
+</div>
+</section>
+</body>
+</html>

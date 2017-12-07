@@ -1,0 +1,290 @@
+<h2 id="calculateandplotthedecayoflinkagedisequilibriumwithdistance">Calculate and plot the decay of linkage disequilibrium with distance</h2>
+<p>Using our code from last week that calculates distance, D, and r<sup>2</sup>, this week we will create a loop that performs these calculations on <strong>all</strong> PAIRS of sites in a data file with 155 SNPs.</p>
+<h3 id="beforestarting">Before Starting:</h3>
+<p>Make sure that you have access to the <code>read.vcf()</code> function (either from my <a title="R-functions" href="https://clemson.instructure.com/courses/34867/pages/r-functions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/r-functions" data-api-returntype="Page">compGen17_fxns.R</a> file or copying and pasting from your previous code).</p>
+<p>Then, load the sample data file for this week: <a class="instructure_file_link instructure_scribd_file" title="6_sampleData_LD.vcf" href="https://clemson.instructure.com/courses/34867/files/1971057/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/1971057" data-api-returntype="File">6_sampleData<em>_</em>LD.vcf</a>.</p>
+<p>You should have a total of <strong>155 rows</strong> and <strong>42 columns</strong> if your data is read in correctly.</p>
+<h3 id="setupanemptyresultstable">Set up an Empty Results Table:</h3>
+<p>As usual, we need to create a new data table to store results BEFORE starting our loop, but this time, the number of results that we are going to generate will be <strong>more</strong> than the number of rows we start out with.</p>
+<p>Because we will test every pair of SNPs, we will actually have <img class="equation_image" title="\binom{x}{2}" src="https://clemson.instructure.com/equation_images/%255Cbinom%257Bx%257D%257B2%257D" alt="LaTeX: \binom{x}{2}" data-equation-content="\binom{x}{2}" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mrow&gt;
+    &lt;mrow class=&quot;MJX-TeXAtom-OPEN&quot;&gt;
+      &lt;mo maxsize=&quot;1.2em&quot; minsize=&quot;1.2em&quot;&gt;(&lt;/mo&gt;
+    &lt;/mrow&gt;
+    &lt;mfrac linethickness=&quot;0&quot;&gt;
+      &lt;mi&gt;x&lt;/mi&gt;
+      &lt;mn&gt;2&lt;/mn&gt;
+    &lt;/mfrac&gt;
+    &lt;mrow class=&quot;MJX-TeXAtom-CLOSE&quot;&gt;
+      &lt;mo maxsize=&quot;1.2em&quot; minsize=&quot;1.2em&quot;&gt;)&lt;/mo&gt;
+    &lt;/mrow&gt;
+  &lt;/mrow&gt;
+&lt;/math&gt;" />&nbsp;("x choose 2") r<sup>2</sup> calculations, where <em>x</em> is the number of SNPs. Lucky for us, R has a built-in combinatorics function that we can use to quickly figure out exactly how many rows will need:</p>
+<pre><code>num.results = ncol(combn(x=nrow(my.data), m=2))
+</code></pre>
+<p>Now, you can set up an empty table with this number of rows, and 2 columns:</p>
+<ul>
+<li>Distance (between SNPs)</li>
+<li>R-squared</li>
+</ul>
+<h3 id="1calculatethedistanceandrsquaredvaluesforeverypairofsnps">1. Calculate the Distance and R-squared values for every PAIR of SNPs</h3>
+<p>This is going to require a <a class="instructure_file_link instructure_scribd_file" title="nestedLoop_demo.pptx" href="https://clemson.instructure.com/courses/34867/files/1980696/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/1980696" data-api-returntype="File"><em>nested</em> loop structure</a>, which we have not seen yet. The outer <code>for</code> loop needs to start at 1 (the first SNP), and then go all the way to the <em>next to the last</em> SNP in the file:</p>
+<pre><code>for (i in 1:(nrow(my.data)-1)) {
+</code></pre>
+<p>The inner loop will always need to start at the next SNP <em>after</em> the i<sup>th</sup> SNP, and it will end at the last SNP in the file:</p>
+<pre><code>for (j in (i+1):nrow(my.data)) {
+</code></pre>
+<p>We are also going to need to set up a "counter" variable to help us keep track of which row in the results we are on, since this is no longer going to match up to the row of the input data.</p>
+<p>Here is the general structure for what your loop should look like (in the example code I'm assuming I've got a results table called <code>my.results</code> with two columns called <code>Distance</code>&nbsp;and <code>Rsquared</code>):</p>
+<pre><code>counter = 1
+
+for (i in 1:(nrow(my.data)-1)) {
+    for (j in (i+1):nrow(my.data)) {
+        <span style="color: #993300;">YOUR CODE TO CALCULATE DISTANCE BETWEEN THE ith AND jth SNP</span>
+        <span style="color: #993300;">YOUR CODE TO CALCULATE LD FOR THE ith AND the jth SNP</span> 
+        my.results$Distance[counter] = <span style="color: #993300;">YOUR DISTANCE CALCULATION</span>
+        my.results$Rsquared[counter] = <span style="color: #993300;">YOUR R-SQUARED CALCULATION</span>
+        counter = counter + 1
+    }
+}
+</code></pre>
+<p>The last line of the code in the loop is advancing the counter, so that we add our results to the next row on the next iteration.</p>
+<p><em>Note: When you run your loop, it may take several seconds or even a few minutes to complete-so don't worry if your code doesn't return the command prompt ("&gt;" symbol) right away.</em></p>
+<p>Here are the first few results that I get, so you can check your answers:</p>
+<pre><code>head(my.results)
+  Distance    Rsquared
+1      446 0.126181723
+2      681 0.620710220
+3     2624 0.669148059
+4     3068 0.004136029
+5     3548 0.001504415
+6     3625 0.678104959
+</code></pre>
+<h3 id="2plotthedecayofldwithdistance">2. Plot the Decay of LD with Distance</h3>
+<p>Once you have results from the full data set, plot r<sup>2</sup> as a function of distance in order to observe the decay of LD.</p>
+<p>To do this, you can modify the plotting function below by filling in your own <code>x</code> and <code>y</code> variable names to create this graph.</p>
+<p><em>Optional:</em> If you'd like to avoid having to type out both the table and column names for every variable (i.e. my.results$Distance, etc.), you can use the <code>attach</code> function to just refer to the column names of a table directly (I'm providing this tip in response to someone who asked about a way to do this in class, and I thought others might be interested as well):</p>
+<pre><code>head(my.results)
+  Distance    Rsquared
+1      446 0.126181723
+2      681 0.620710220
+3     2624 0.669148059
+4     3068 0.004136029
+5     3548 0.001504415
+6     3625 0.678104959
+
+attach(my.results)
+head(Distance)
+[1]  446  681 2624 3068 3548 3625
+</code></pre>
+<p><strong>Plotting Function:</strong></p>
+<pre><code>plot(x=<span style="color: #993300;">Your distance values</span>, y=<span style="color: #993300;">Your r2 values</span>, xlab="Distance between SNPs (bp)", ylab=expression(R^2), pch=20, col=rgb(0,0,0,alpha=0.2), main="Decay of Linkage Disequilibrium")
+</code></pre>
+<p>Within this command, I use the <code>rgb()</code> function with the <code>alpha</code> option to create semi-transparent points. This helps us to see where all of the data is.</p>
+<h4 id="addasmoothedlinetoshowthetrendofdecay"><strong>Add a Smoothed Line to Show the Trend of Decay</strong></h4>
+<p>When you create your plot, you&rsquo;ll notice that even though you can see a trend, the raw data plot is pretty messy, and does not look like results that are typically published. To help with this, use the code below to create and plot a moving average of LD in increments of 500bp distances.</p>
+<h5 id="step1"><strong>Step 1:</strong></h5>
+<p>Find all possible 500bp intervals using the <code>seq()</code> function:</p>
+<pre><code>bins=seq(1,max(<span style="color: #993300;">YOUR DISTANCE RESULTS</span>), by=500)
+</code></pre>
+<p>The <code>seq()</code> function generates a series of numbers between a given minimum and maximum value, in intervals of a specified size. The function above uses a starting value of <em>1</em>, a maximum value of whatever our calculated distance is, and it will report every number between those values in intervals of 500 base pairs:</p>
+<pre><code>head(bins)
+[1]    1  501 1001 1501 2001 2501
+</code></pre>
+<h5 id="step2"><strong>Step 2:</strong></h5>
+<p>Calculate the average r<sup>2</sup> value in each bin.</p>
+<p>Start by creating a table to hold our results. This table will have 2 columns: the first column will be the&nbsp;bin values,&nbsp;and the second will be the average r<sup>2</sup> value for&nbsp;each bin.</p>
+<pre><code>my.means=rep(0, length(bins))
+LD.averages=data.frame(bins, my.means)
+</code></pre>
+<p>Now, loop through the list of intervals, find the subset of data that corresponds to each interval, and get the mean for that <strong>subset</strong> of data:</p>
+<pre><code>for (i in 1:length(bins) {
+    data.interval=subset(my.results, (my.results$Distance &gt;= bins[i] &amp; my.results$Distance &lt; (bins[i]+500))) 
+    LD.averages$my.means[i]=mean(data.interval$Rsquared) 
+}
+</code></pre>
+<p>If you look at the first line inside of the above loop, you'll see that we're using the <code>subset</code> function to get all of the Distance values that fall between the start of the i<sup>th</sup> bin and that value plus 500 (the interval size).</p>
+<pre><code>head(LD.averages)
+bins  my.means
+1    1 0.4687347
+2  501 0.3973289
+3 1001 0.3873935
+4 1501 0.2717473
+5 2001 0.2754991
+6 2501 0.2776452
+</code></pre>
+<h5 id="step3"><strong>Step 3:</strong></h5>
+<p>Add points to the plot to show the interval average values (I will use 2 commands: one to add the points, and then a second to connect the points with a line):</p>
+<pre><code>points(x=LD.averages$bins, y=LD.averages$my.means, col="red", pch=20) 
+lines(x=LD.averages$bins, y=LD.averages$my.means, col="red", lwd=2)
+</code></pre>
+<h3 id="3findtheaveragelinkageblocksize">3. Find the Average Linkage Block Size</h3>
+<p>One value that people are often interested in is how far apart SNPs have to be before LD becomes &ldquo;negligible,&rdquo; which conventionally means the point at which r<sup>2</sup> &lt; 0.1. Find this distance value in our data set. You can use the plot to verify if your answer makes sense.</p>
+<p><strong>Hint:</strong> Use the mean values calculated in the previous step for this, as the raw data will be too noisy.</p>
+<p><strong>Hint 2:</strong> The best way to do this is find the LAST distance value where r<sup>2</sup> &gt; 0.1, because what we really want to know is when does r<sup>2</sup> <span style="text-decoration: underline;">stay</span> below this threshold. Remember that R has <code>min()</code> and <code>max()</code> functions, as well as <code>subset()</code> and <code>which()</code>.</p>
+<p>The value that you get here will be the average LD block size for the sample. What is this value?</p>
+<h4 id="calculateldhalflife"><strong>Calculate LD half-life</strong></h4>
+<p>Another value that is often reported is the LD &ldquo;half-life,&rdquo; which is the point at which the observed&nbsp;r<sup>2</sup> between sites decays to less than half the maximum r<sup>2</sup> value. Find this distance value in our data set, and again use the plot to verify if your answer makes sense.</p>
+<p><strong>Hint:</strong> This should also be based on the mean values rather than the raw data.</p>
+<h3 id="4estimaterho">4. Estimate Rho</h3>
+<p>Finally, in order to estimate the population recombination rate (rho (<img class="equation_image" title="\rho" src="https://clemson.instructure.com/equation_images/%255Crho" alt="LaTeX: \rho" data-equation-content="\rho" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;&amp;#x03C1;&lt;!-- &rho; --&gt;&lt;/mi&gt;
+&lt;/math&gt;" />)), we need to fit a nonlinear model based on Hill and Weir&rsquo;s (1988) equation, given below:</p>
+<p><img class="equation_image" title="E\left(r^2\right)=\left[\frac{10+C}{\left(2+C\right)\left(11+C\right)}\right]\cdot\left[1+\frac{\left(3+C\right)\left(12+12C+C^2\right)}{n\left(2+C\right)\left(11+C\right)}\right]" src="https://clemson.instructure.com/equation_images/E%255Cleft%2528r%255E2%255Cright%2529%253D%255Cleft%255B%255Cfrac%257B10%2BC%257D%257B%255Cleft%25282%2BC%255Cright%2529%255Cleft%252811%2BC%255Cright%2529%257D%255Cright%255D%255Ccdot%255Cleft%255B1%2B%255Cfrac%257B%255Cleft%25283%2BC%255Cright%2529%255Cleft%252812%2B12C%2BC%255E2%255Cright%2529%257D%257Bn%255Cleft%25282%2BC%255Cright%2529%255Cleft%252811%2BC%255Cright%2529%257D%255Cright%255D" alt="LaTeX: E\left(r^2\right)=\left[\frac{10+C}{\left(2+C\right)\left(11+C\right)}\right]\cdot\left[1+\frac{\left(3+C\right)\left(12+12C+C^2\right)}{n\left(2+C\right)\left(11+C\right)}\right]" data-equation-content="E\left(r^2\right)=\left[\frac{10+C}{\left(2+C\right)\left(11+C\right)}\right]\cdot\left[1+\frac{\left(3+C\right)\left(12+12C+C^2\right)}{n\left(2+C\right)\left(11+C\right)}\right]" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;E&lt;/mi&gt;
+  &lt;mrow&gt;
+    &lt;mo&gt;(&lt;/mo&gt;
+    &lt;msup&gt;
+      &lt;mi&gt;r&lt;/mi&gt;
+      &lt;mn&gt;2&lt;/mn&gt;
+    &lt;/msup&gt;
+    &lt;mo&gt;)&lt;/mo&gt;
+  &lt;/mrow&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mrow&gt;
+    &lt;mo&gt;[&lt;/mo&gt;
+    &lt;mfrac&gt;
+      &lt;mrow&gt;
+        &lt;mn&gt;10&lt;/mn&gt;
+        &lt;mo&gt;+&lt;/mo&gt;
+        &lt;mi&gt;C&lt;/mi&gt;
+      &lt;/mrow&gt;
+      &lt;mrow&gt;
+        &lt;mrow&gt;
+          &lt;mo&gt;(&lt;/mo&gt;
+          &lt;mrow&gt;
+            &lt;mn&gt;2&lt;/mn&gt;
+            &lt;mo&gt;+&lt;/mo&gt;
+            &lt;mi&gt;C&lt;/mi&gt;
+          &lt;/mrow&gt;
+          &lt;mo&gt;)&lt;/mo&gt;
+        &lt;/mrow&gt;
+        &lt;mrow&gt;
+          &lt;mo&gt;(&lt;/mo&gt;
+          &lt;mrow&gt;
+            &lt;mn&gt;11&lt;/mn&gt;
+            &lt;mo&gt;+&lt;/mo&gt;
+            &lt;mi&gt;C&lt;/mi&gt;
+          &lt;/mrow&gt;
+          &lt;mo&gt;)&lt;/mo&gt;
+        &lt;/mrow&gt;
+      &lt;/mrow&gt;
+    &lt;/mfrac&gt;
+    &lt;mo&gt;]&lt;/mo&gt;
+  &lt;/mrow&gt;
+  &lt;mo&gt;&amp;#x22C5;&lt;!-- &sdot; --&gt;&lt;/mo&gt;
+  &lt;mrow&gt;
+    &lt;mo&gt;[&lt;/mo&gt;
+    &lt;mrow&gt;
+      &lt;mn&gt;1&lt;/mn&gt;
+      &lt;mo&gt;+&lt;/mo&gt;
+      &lt;mfrac&gt;
+        &lt;mrow&gt;
+          &lt;mrow&gt;
+            &lt;mo&gt;(&lt;/mo&gt;
+            &lt;mrow&gt;
+              &lt;mn&gt;3&lt;/mn&gt;
+              &lt;mo&gt;+&lt;/mo&gt;
+              &lt;mi&gt;C&lt;/mi&gt;
+            &lt;/mrow&gt;
+            &lt;mo&gt;)&lt;/mo&gt;
+          &lt;/mrow&gt;
+          &lt;mrow&gt;
+            &lt;mo&gt;(&lt;/mo&gt;
+            &lt;mrow&gt;
+              &lt;mn&gt;12&lt;/mn&gt;
+              &lt;mo&gt;+&lt;/mo&gt;
+              &lt;mn&gt;12&lt;/mn&gt;
+              &lt;mi&gt;C&lt;/mi&gt;
+              &lt;mo&gt;+&lt;/mo&gt;
+              &lt;msup&gt;
+                &lt;mi&gt;C&lt;/mi&gt;
+                &lt;mn&gt;2&lt;/mn&gt;
+              &lt;/msup&gt;
+            &lt;/mrow&gt;
+            &lt;mo&gt;)&lt;/mo&gt;
+          &lt;/mrow&gt;
+        &lt;/mrow&gt;
+        &lt;mrow&gt;
+          &lt;mi&gt;n&lt;/mi&gt;
+          &lt;mrow&gt;
+            &lt;mo&gt;(&lt;/mo&gt;
+            &lt;mrow&gt;
+              &lt;mn&gt;2&lt;/mn&gt;
+              &lt;mo&gt;+&lt;/mo&gt;
+              &lt;mi&gt;C&lt;/mi&gt;
+            &lt;/mrow&gt;
+            &lt;mo&gt;)&lt;/mo&gt;
+          &lt;/mrow&gt;
+          &lt;mrow&gt;
+            &lt;mo&gt;(&lt;/mo&gt;
+            &lt;mrow&gt;
+              &lt;mn&gt;11&lt;/mn&gt;
+              &lt;mo&gt;+&lt;/mo&gt;
+              &lt;mi&gt;C&lt;/mi&gt;
+            &lt;/mrow&gt;
+            &lt;mo&gt;)&lt;/mo&gt;
+          &lt;/mrow&gt;
+        &lt;/mrow&gt;
+      &lt;/mfrac&gt;
+    &lt;/mrow&gt;
+    &lt;mo&gt;]&lt;/mo&gt;
+  &lt;/mrow&gt;
+&lt;/math&gt;" /></p>
+<p>where C = <img class="equation_image" title="\rho" src="https://clemson.instructure.com/equation_images/%255Crho" alt="LaTeX: \rho" data-equation-content="\rho" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;&amp;#x03C1;&lt;!-- &rho; --&gt;&lt;/mi&gt;
+&lt;/math&gt;" />*distance and n=sample size</p>
+<p>To get an estimate of <img class="equation_image" title="\rho" src="https://clemson.instructure.com/equation_images/%255Crho" alt="LaTeX: \rho" data-equation-content="\rho" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;&amp;#x03C1;&lt;!-- &rho; --&gt;&lt;/mi&gt;
+&lt;/math&gt;" />&nbsp;based on this equation and our observed data, we will use R&rsquo;s built in non-linear least squares function (nls). This function takes a formula describing the relationship between variables (in this case given by the above equation), a starting value for the unknown parameter (in this case <img class="equation_image" title="\rho" src="https://clemson.instructure.com/equation_images/%255Crho" alt="LaTeX: \rho" data-equation-content="\rho" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;&amp;#x03C1;&lt;!-- &rho; --&gt;&lt;/mi&gt;
+&lt;/math&gt;" />), and iteratively tries to find the value for the unknown parameter that gives the best fit to the data.</p>
+<h5 id="step1-1"><strong>Step 1:</strong></h5>
+<p>Find the value of n based on the number of genotypes (this should be 33):</p>
+<pre><code>n=length(genotypes)
+</code></pre>
+<h5 id="step2-1"><strong>Step 2:</strong></h5>
+<p>Define the Hill and Weir equation in terms of the variable names for YOUR DATA. In this instance, all of my LD results are in a data frame called <em>my.results</em>, with columns named <em>Distance</em> and <em>Rsquared.</em>. You do NOT need to refer to the table name here (just use your column names!). We will give the function our table name in the next step.</p>
+<pre><code>hill.weir.eq=(Rsquared~(((10+(rho*Distance))/((2+(rho*Distance))*(11+(rho*Distance))))*(1+(((3+(rho*Distance))*(12+(12*(rho*Distance))+((rho*Distance)**2)))/(n*(2+(rho*Distance))*(11+(rho*Distance)))))))
+</code></pre>
+<h5 id="step3-1"><strong>Step 3:</strong></h5>
+<p>Set a starting value for rho (must be between 0 and 1). Here I arbitrarily select 0.1. Then fit the model with the nls() function:</p>
+<pre><code>rho.start=0.1
+m=nls(formula=hill.weir.eq, data=my.results, start=list(rho=rho.start))
+results.m=summary(m)
+
+results.m
+
+Formula: Rsquared ~ (((10 + (rho * Distance))/((2 + (rho * Distance)) * 
+    (11 + (rho * Distance)))) * (1 + (((3 + (rho * Distance)) * 
+    (12 + (12 * (rho * Distance)) + ((rho * Distance)^2)))/(n * 
+    (2 + (rho * Distance)) * (11 + (rho * Distance))))))
+
+Parameters:
+    Estimate Std. Error t value Pr(&gt;|t|)    
+rho 0.0007489  0.0000151   49.61   &lt;2e-16 ***
+
+Signif. codes:  0 &lsquo;***&rsquo; 0.001 &lsquo;**&rsquo; 0.01 &lsquo;*&rsquo; 0.05 &lsquo;.&rsquo; 0.1 &lsquo; &rsquo; 1
+
+Residual standard error: 0.1594 on 11934 degrees of freedom
+
+Number of iterations to convergence: 8 
+Achieved convergence tolerance: 4.066e-06
+</code></pre>
+<p>Test the fit of the model by looking at the correlation between the actual values and the predicted values:</p>
+<pre><code>cor(my.results$Rsquared, predict(m))
+</code></pre>
+<p>What is your rho estimate?</p>
+<h5 id="step5"><strong>Step 4:</strong></h5>
+<p>Extract the estimate of rho from the model results, and calculate the expected rho values using the same Hill and Weir equation, but now with your new estimate of rho plugged in:</p>
+<pre><code>rho.estimate=results.m$parameters[1]
+Distance=sort(my.results$Distance)
+
+exp.rsquared=(((10+(rho.estimate*Distance))/((2+(rho.estimate*Distance))*(11+(rho.estimate*Distance))))*(1+(((3+(rho.estimate*Distance))*(12+(12*(rho.estimate*Distance))+((rho.estimate*Distance)**2)))/(n*(2+(rho.estimate*Distance))*(11+(rho.estimate*Distance))))))
+</code></pre>
+<h5 id="step6"><strong>Step 5:</strong></h5>
+<p>Plot the fitted curve by adding a line of the expected results to the graph:</p>
+<pre><code>lines(Distance, exp.rsquared, col="purple", lwd=2)
+legend(32000,0.99, c("Means", "Expected R2"), lty=c(1,1), col=c("red", "purple"))
+</code></pre>
+<p>How well does your fitted curve match up to your moving average curve?</p>

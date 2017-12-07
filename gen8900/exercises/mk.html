@@ -1,0 +1,280 @@
+<h2 id="testingforpositiveselectioninpolarbears">Testing for Positive Selection in Polar Bears</h2>
+<p>For today's exercise, we are going to perform the McDonald-Kreitman test, which looks at the proportion of amino acid changes occurring between species, and compares this to the proportion occurring within a species. In neutrally evolving genes (or at least genes neutral with respect to species differences), these proportions will be the same, but in genes under selection, they will be different.</p>
+<h3 id="partoneannotatingcodingandnoncodingvariants">Part One: Annotating Coding and Non-Coding Variants</h3>
+<p>Because we need to known which of our SNPs are <span style="text-decoration: underline;">nonsynonymous</span> (cause amino acid changes) and which are <span style="text-decoration: underline;">synonymous</span>, we are going to use an R package called "VariantAnnotation" to help us figure this out.</p>
+<h4 id="downloadthesampledata"><strong>Download the Sample Data</strong></h4>
+<p>There are multiple data files needed for this week, and they can all be found in the zipped file: <a class="instructure_file_link" title="9_sampleData_MK.tar.gz" href="https://clemson.instructure.com/courses/34867/files/2164364/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2164364" data-api-returntype="File">9_sampleData<em>_</em>MK.tar.gz</a>. Download and unzip this file into the folder where you normally keep your class files.</p>
+<p>Once the folder is unzipped, you should see the following files inside of it:</p>
+<pre><code>UrsMar_subset.fa
+UrsMar_subset.fa.fai
+UrsMar_subset.gff3
+bears.vcf
+</code></pre>
+<p>In total, the unzipped files will take up about <strong>85 Mb</strong> of space on your computer.&nbsp; If you absolutely do not have space for this (even for today), let me know, I will figure out a way for you to get a copy of the final annotated vcf file only.</p>
+<h4 id="installthenecessaryrpackages"><strong>Install the Necessary R Packages</strong></h4>
+<p>There are 3 packages that we are going to need today, and they all come from the <a href="http://bioconductor.org/">Bioconductor</a> repository. To install these packages, in R, type:</p>
+<pre><code>source("https://bioconductor.org/biocLite.R")
+biocLite("VariantAnnotation")
+biocLite("GenomicFeatures")
+biocLite("Rsamtools")
+</code></pre>
+<p>Some of these packages have a number of dependencies, so don't worry if you see a lot of output to the screen while they install. If they ask you something about installing from source, you can simply type in the letter "a" and hit enter; this will get them to recompile everything they need.</p>
+<h4 id="runningthevariantannotationpipeline"><strong>Running the VariantAnnotation Pipeline</strong></h4>
+<p>Once all of the packages are installed, we can use them to load our data and annotate our SNPs.</p>
+<p>I start (as always) by setting my working directory to where I keep files for this class:</p>
+<pre><code>setwd("~/Desktop/Teaching/CompGenWS-GEN8900/")
+</code></pre>
+<p>The first task is to open a connection to the Reference Genome .fasta file (this is what is taking up the most space):</p>
+<pre><code>library(Rsamtools)
+fa = open(FaFile("9_sampleData_MK/UrsMar_subset.fa"))
+</code></pre>
+<p>Next, we read in the .gff3 file, which contains the locations of all of the genes in the reference:</p>
+<pre><code>library(GenomicFeatures)
+txdb=makeTxDbFromGFF(file="9_sampleData_MK/UrsMar_subset.gff3", format="gff3")
+</code></pre>
+<p>Now, I'm going to use this R package's <code>readVcf()</code> function (note that this is <strong>different</strong> from the function we wrote during the first week of class!!):</p>
+<pre><code>library(VariantAnnotation)
+vcf.object=readVcf(file="9_sampleData_MK/bears.vcf")
+</code></pre>
+<p>With those 3 pieces of information read in, we can use the <code>predictCoding()</code> function to determine which SNPs are nonsynonymous and synonymous:</p>
+<pre><code>effects = predictCoding(vcf.object, txdb, fa)
+</code></pre>
+<p>If we print the information in <code>effects</code> to the screen, we should see (among other things), a column in the table called "CONSEQUENCE" where each SNP has been classified.</p>
+<p>While this was all pretty quick and easy, we are not quite done yet: we want to edit this output so that it can fit into our more familiar "my.data" VCF format data frame before we try and work with it.</p>
+<p>There are a couple of things to consider here:</p>
+<ol>
+<li><code>predictCoding</code> only considers SNPs that fall within exons; so there is <span style="text-decoration: underline;">not</span> an entry in the <em>effects</em> table for every entry in our starting VCF file.</li>
+<li>Both the <code>vcf.object</code> we created when we used their readVcf function and the <code>effects</code> object are complex data structures (not the usual 2 dimensional data frames we're used to).</li>
+</ol>
+<p>I'm first going to deal with issue #1. My strategy is to get the unique row names (these were created by the functions) from both the <code>effects</code> object and <code>vcf.object</code>, then use R's <code>match()</code> function to see how they match up:</p>
+<pre><code>id.from.effects = names(ranges(effects))
+id.from.vcf = rownames(info(vcf.object))
+m = match(id.from.vcf, id.from.effects)
+</code></pre>
+<p>The <code>match()</code> function will take every item in the first vector that you give it (here we give it the row names from the vcf.object), and find the corresponding <strong>index</strong> of the match in the second vector. If there is no match, it will return NA.</p>
+<p>Now, I'm going to use the matching index I got in <code>m</code>, and assign the values from the <code>effects $CONSEQUENCE</code> column to their corresponding rows in my original vcf.object. I'm going to put these values into the <strong>INFO</strong> column of the VCF:</p>
+<pre><code>info(vcf.object)$CSQ = effects$CONSEQUENCE[m]
+</code></pre>
+<p><span style="color: #808080;">Don't worry if you get a warning message ("info fields with no header") here.</span></p>
+<p>I'm going to take a similar approach, and put the <em>GENEID</em> from <code>effects</code> into the <strong>ID</strong> column of the vcf:</p>
+<pre><code>names(vcf.object) = effects$GENEID[m]
+</code></pre>
+<p>After doing this, I've got all of the details that I need for the MK-test stored in my <em>vcf.object</em>, but I still don't have a nice data frame that's easy to work with.</p>
+<p>To get this, we're going to load in the functions we've created in this class, and then use our <em>own</em> read.vcf function:</p>
+<pre><code>library(devtools)
+source_gist("c954c757db02eb6c4ccfae1aa090658c", filename="compGen17_fxns.R", quiet=TRUE)
+my.data=read.vcf(writeVcf(vcf.object, "9_sampleData_MK/bears_wAnn.vcf"), header=TRUE, stringsAsFactors=FALSE)
+</code></pre>
+<p>After running the above command, we simultaneously write out a new VCF file (with all of our annotations saved) to our working directory, <em>and</em> we read that file back in with <code>read.vcf</code>, to get the familiar my.data table:</p>
+<pre><code>dim(my.data)
+[1] 2105   19
+</code></pre>
+<p>If you try <code>head(my.data)</code>, you'll see that there are a bunch of NAs in the first few rows of the <strong>ID</strong> column, because most SNPs were <em>not</em> in coding regions. We don't care about these SNPs for the MK test, so lets filter them out like this:</p>
+<pre><code>my.data = my.data[!(is.na(my.data$ID)),]
+dim(my.data)
+[1] 141  19
+</code></pre>
+<p>The <code>!</code> symbol stands for "NOT" in R, so I'm saying get all of the rows where the value of my.data$ID is <span style="text-decoration: underline;">NOT</span> NA.</p>
+<p>If you try <code>head(my.data)</code> again, you should now see a gene name in the ID column, and at the very end of the (long) line in the INFO colum, you'll see a value for <em>CSQ</em>. Let's clean up the INFO column a bit, so that we <em>only</em> have the CSQ values to deal with:</p>
+<pre><code>my.data$INFO = gsub(".*;CSQ=", "", my.data$INFO)
+head(my.data)
+CHROM                       POS         ID      REF ALT    QUAL FILTER          INFO         FORMAT              Uame_JC012               Uarc_EP040
+16  NW_007907101.1 6052945 LYST   G   A  621.71      .    synonymous GT:AD:DP:GQ:PL 0/0:17,0:17:51:0,51,576 0/1:7,15:22:99:359,0,249
+17  NW_007907101.1 6052951 LYST   A   G  144.31      .    synonymous GT:AD:DP:GQ:PL 0/0:17,0:17:51:0,51,576 0/1:15,8:23:99:178,0,627
+34  NW_007907101.1 6054393 LYST   A   G  487.29      .    synonymous GT:AD:DP:GQ:PL 1/1:0,17:17:51:534,51,0    0/0:5,0:5:15:0,15,179
+337 NW_007907101.1 6075809 LYST   T   C   46.93      . nonsynonymous GT:AD:DP:GQ:PL      0/0:1,0:1:3:0,3,43     0/0:4,0:4:12:0,12,99
+372 NW_007907101.1 6077520 LYST   G   A  205.31      .    synonymous GT:AD:DP:GQ:PL   0/0:8,0:8:24:0,24,247  0/0:13,0:13:36:0,36,540
+373 NW_007907101.1 6077526 LYST   A   G 1326.86      .    synonymous GT:AD:DP:GQ:PL   1/1:0,8:8:24:209,24,0  1/1:0,14:14:42:525,42,0
+</code></pre>
+<p>To see the different gene IDs in this data set, try the <code>unique()</code> function:</p>
+<pre><code>unique(my.data$ID)
+</code></pre>
+<p>You can run this function on any vector, and it will get the total number of different possible values that could be in that vector. Try it on the INFO column as well, to see the possible annotation categories.</p>
+<h3 id="parttwoidentifyfixedandpolymorphicsites">Part Two: Identify Fixed and Polymorphic Sites</h3>
+<p>Now that we've got the data table into a much more manageable format, and we've gone through and picked out the nonsynonymous and synonymous sites, the next key ingredient in the MK test is to identify <strong>Fixed</strong> and <strong>Polymorphic</strong> sites:</p>
+<ul>
+<li>
+<p><span style="text-decoration: underline;">Fixed</span>: Sites where individuals within each species all have the same allele, but individuals from different species have different alleles.</p>
+</li>
+<li>
+<p>Polymorphic: Sites where more than 1 allele is found within either one (or both) of the species.</p>
+</li>
+</ul>
+<p>In today's data, we have 10 individuals: 7 of them are polar bears (<em>Ursus maritimus</em>), 2 of them are grizzly bears (<em>Ursus arctos horribilis</em>), and 1 is an American black bear (<em>Ursus americanus</em>). Since we are interested in selection on genes that may be important specifically in polar bear evolution, we will treat the grizzlies and the black bear as a <strong>single out-group.</strong> See the schematic below:</p>
+<p><img src="https://clemson.instructure.com/courses/34867/files/2166479/preview" alt="bear_tree.png" width="720" height="405" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2166479" data-api-returntype="File" /></p>
+<p>Select the <strong>ID</strong> and <strong>INFO</strong> columns from <code>my.data</code>, and put them into a new data frame of their own.</p>
+<pre><code>head(new)
+  ID          INFO
+16  LYST    synonymous
+17  LYST    synonymous
+34  LYST    synonymous
+337 LYST nonsynonymous
+372 LYST    synonymous
+373 LYST    synonymous
+</code></pre>
+<p>Add <em>at least</em> 1 new column to this table, to hold the "Fixed" or "Polymorphic" classification for each SNP site (and feel free to create extra columns that can help you do this classification!).</p>
+<p><strong>Hint:</strong> Remeber from the<a title="FST Solutions" href="https://clemson.instructure.com/courses/34867/pages/fst-solutions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/fst-solutions" data-api-returntype="Page"> F<sub>ST</sub> exercises </a>that we can find column names corresponding to a particular pattern (such as a species name) with grep, and extract those columns with the [] notation:</p>
+<pre><code>data.w.pattern = my.data[, grep("<span style="color: #008000;">some pattern</span>", colnames(my.data))]
+</code></pre>
+<p>There are several different ways you can determine if SNPs are fixed or polymorphic. I'll leave it up to you to figure out your own strategy, but to help you get started, here are some things to remember:</p>
+<ul>
+<li>We have functions and a lot of previous code that calculates allele frequencies or genotype counts, and either of those values would be useful here,</li>
+<li>The reference genome I aligned to was from another Polar Bear</li>
+<li>Earlier in this exercise, we also saw the <code>unique</code> function, which could possibly be of some use if you wanted to try and different strategy</li>
+<li>During the first week of LD exercises, we were trying to find haplotype patterns, we saw some ways we could use R's arithmetic capabilities to our advantage, which is also something to consider here.</li>
+</ul>
+<p>Here are the first few results of my table:</p>
+<pre><code>head(new)
+  ID             INFO            SiteClass
+16  LYST    synonymous           Polymorphic
+17  LYST    synonymous           Polymorphic
+34  LYST    synonymous           Polymorphic
+337 LYST nonsynonymous           Polymorphic
+372 LYST    synonymous           Polymorphic
+373 LYST    synonymous           Fixed
+</code></pre>
+<p><strong>Note:</strong> You should not feel obligated to use the words "Fixed" and "Polymorphic" to assign your SNP classes; if you want to use numeric classifications, that is fine. If you <em>do</em> want to use words, here is a hint to how I did that:</p>
+<pre><code>x = <span style="color: #008000;">A numeric vector from a calculation I used to help me classify sites</span>
+new$SiteClass = x <span style="color: #ff9900;"># I start by just assigning this numeric vector to my new table</span>
+new$SiteClass[which(x == 1)] = "Fixed" <span style="color: #ff9900;"># Then I change values where x=1 to be called Fixed</span>
+new$SiteClass[which(x != 1)] = "Polymorphic" <span style="color: #ff9900;"># x values not equal to 1 get called "Polymorphic"
+</span></code></pre>
+<h3 id="partthreeperformthemktest">Part Three: Perform the MK Test</h3>
+<p>After we've classified each of our SNPs as either Synonymous or Nonsynonymous, and as either Fixed or Polymorphic, it's time to get the count of SNPs in each of the following categories (<span style="background-color: #ffff00;">DO THIS SEPARATELY FOR EACH GENE!!</span>):</p>
+<ul>
+<li>Fn = The number of <strong>Fixed Nonsynonymous</strong> sites</li>
+<li>Fs = The number of <strong>Fixed Synonymous</strong> sites</li>
+<li>Pn = The number of <strong>Polymorphic Nonsynonymous</strong> sites</li>
+<li>Ps = The number of <strong>Polymorphic Synonymous</strong> sites</li>
+</ul>
+<p>Here is what my empty results table looks like to start with:</p>
+<pre><code>my.results
+    Genes Fn Fs Pn Ps
+1  LYST  0  0  0  0
+2  APOB  0  0  0  0
+</code></pre>
+<p>For getting the counts of each category, there are several functions we've used in past exercises that will come in handy (such as <code>subset</code> or <code>which</code>). There is also another function, that we haven't talked about yet, called <code>intersect()</code>, which you may be interested in:</p>
+<pre><code>x = seq(1,10)
+y = seq(5,15)
+intersect(x,y)
+[1]  5  6  7  8  9 10
+</code></pre>
+<p>Here are my final counts so you can check your calculations:</p>
+<pre><code>my.results
+    Genes Fn Fs Pn Ps
+1  LYST 14  5 19 27
+2  APOB 17  4 26 29
+</code></pre>
+<p>For each gene, calculate the <strong>Nonsynonymous/Synonymous</strong> Ratio Between Species (=Fn/Fs), and Within Species (=Pn/Ps):</p>
+<pre><code>my.results
+    Genes Fn Fs  Pn  Ps   BetweenN_S         WithinN_S
+1  LYST   14  5  19  27            2.80         0.7037037
+2  APOB  17  4  26  29            4.25         0.8965517
+</code></pre>
+<p>Let's also calculate the Neutrality Index (NI) for each gene.</p>
+<p><img class="equation_image" title="NI\:=\:\frac{\left(\frac{P_N}{P_S}\right)}{\left(\frac{F_N}{F_S}\right)}" src="https://clemson.instructure.com/equation_images/NI%255C%253A%253D%255C%253A%255Cfrac%257B%255Cleft%2528%255Cfrac%257BP_N%257D%257BP_S%257D%255Cright%2529%257D%257B%255Cleft%2528%255Cfrac%257BF_N%257D%257BF_S%257D%255Cright%2529%257D" alt="LaTeX: NI\:=\:\frac{\left(\frac{P_N}{P_S}\right)}{\left(\frac{F_N}{F_S}\right)}" data-equation-content="NI\:=\:\frac{\left(\frac{P_N}{P_S}\right)}{\left(\frac{F_N}{F_S}\right)}" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;N&lt;/mi&gt;
+  &lt;mi&gt;I&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mfrac&gt;
+    &lt;mrow&gt;
+      &lt;mo&gt;(&lt;/mo&gt;
+      &lt;mfrac&gt;
+        &lt;msub&gt;
+          &lt;mi&gt;P&lt;/mi&gt;
+          &lt;mi&gt;N&lt;/mi&gt;
+        &lt;/msub&gt;
+        &lt;msub&gt;
+          &lt;mi&gt;P&lt;/mi&gt;
+          &lt;mi&gt;S&lt;/mi&gt;
+        &lt;/msub&gt;
+      &lt;/mfrac&gt;
+      &lt;mo&gt;)&lt;/mo&gt;
+    &lt;/mrow&gt;
+    &lt;mrow&gt;
+      &lt;mo&gt;(&lt;/mo&gt;
+      &lt;mfrac&gt;
+        &lt;msub&gt;
+          &lt;mi&gt;F&lt;/mi&gt;
+          &lt;mi&gt;N&lt;/mi&gt;
+        &lt;/msub&gt;
+        &lt;msub&gt;
+          &lt;mi&gt;F&lt;/mi&gt;
+          &lt;mi&gt;S&lt;/mi&gt;
+        &lt;/msub&gt;
+      &lt;/mfrac&gt;
+      &lt;mo&gt;)&lt;/mo&gt;
+    &lt;/mrow&gt;
+  &lt;/mfrac&gt;
+&lt;/math&gt;" /></p>
+<pre><code>my.results
+    Genes    Fn   Fs  Pn  Ps      BetweenN_S      WithinN_S        NI
+1  LYST      14    5  19  27      2.80             0.7037037   0.2513228
+2  APOB     17    4  26  29       4.25             0.8965517   0.2109533
+</code></pre>
+<p>The Neutrality Index is useful because we know that values &lt; 1 can be indicative of positive selection, while values &gt;1 may be caused by negative or balancing selection.</p>
+<h4 id="testforsignificancewithfishersexacttest"><strong>Test for Significance with Fisher's Exact Test</strong></h4>
+<p>To get a p-value associate with each of our genes (to see if they significantly differ from neutral expectations), we'll use the Fisher's Exact Test, which we used all the way back during <a title="HWE Solutions" href="https://clemson.instructure.com/courses/34867/pages/hwe-solutions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/hwe-solutions" data-api-returntype="Page">Hardy-Weinberg week</a>.</p>
+<p>To do Fisher's Test for each gene, you need your data into a matrix like this:</p>
+<table style="border-color: black;" border="black">
+<tbody>
+<tr>
+<td>F<sub>n</sub></td>
+<td>F<sub>S</sub></td>
+</tr>
+<tr>
+<td>P<sub>n</sub></td>
+<td>P<sub>S</sub></td>
+</tr>
+</tbody>
+</table>
+<p>Then you can run the command:</p>
+<pre><code>fisher.test(<span style="color: #008000;">YOUR MATRIX</span>)
+</code></pre>
+<p>To extract the p-value, we do:</p>
+<pre><code>fisher.test(<span style="color: #008000;">YOUR MATRIX</span>)$p.value
+</code></pre>
+<h4 id="plottheresults"><strong>Plot the Results</strong></h4>
+<p>Even though the key information comes from checking the p-values and the Neutrality Index, it can also be helpful to plot some of the values to highlight especially significant genes.</p>
+<p>Below, I'll create a bar plot with the N/S ratios for Between and Within Species in each gene, and then I'll add some indicators of the p-values as well (using a very non-sophisticated technique):</p>
+<p><span style="text-decoration: underline;">Step 1: Set up a matrix (required by barplot) of the values I want to plot:</span></p>
+<pre><code>for.plot=matrix(c(my.results$BetweenN_S, my.results$WithinN_S), ncol=2)
+colnames(for.plot)=c("Between", "Within")
+rownames(for.plot)=my.results$Genes
+
+for.plot
+     Between    Within
+LYST    2.80 0.7037037
+APOB    4.25 0.8965517
+</code></pre>
+<p><span style="text-decoration: underline;">Step 2: Plot the Between and Within Proportions for each Gene</span></p>
+<pre><code>barplot(t(for.plot), beside=T,
+    ylab="Ratio of Nonsynonymous to Synonymous Sites",
+    xlab="Gene", col=c("darkgreen", "dodgerblue"),
+    ylim=c(0,6))
+</code></pre>
+<p><span style="text-decoration: underline;">Step 3: Add a Legend:</span></p>
+<pre><code>legend("topleft", c("Between Species (F)", "Within Species (P)"),
+    pch=15, col=c("darkgreen", "dodgerblue"), bty="n")
+</code></pre>
+<p><span style="text-decoration: underline;">Step 4: Add "Brackets" over the bars to show exactly which difference the p-values are signifying (i.e. the diff. in ratios within each gene, not between genes):</span></p>
+<pre><code>lines(c(1.5,2.5), c(3,3))
+lines(c(1.5,1.5), c(3,2.9))
+lines(c(2.5,2.5), c(3,2.9))
+
+lines(c(4.5,5.5), c(4.5,4.5))
+lines(c(4.5,4.5), c(4.5,4.4))
+lines(c(5.5,5.5), c(4.5,4.4))
+</code></pre>
+<p><span style="text-decoration: underline;">Step 5: Write p-values on the graph:</span></p>
+<pre><code>temp=rep("p =", 2)
+p.labels=paste(temp, round(my.results$pValues, 2))
+text(c(2,5), c(3.1,4.6), p.labels)
+</code></pre>
+<p><img src="https://clemson.instructure.com/courses/34867/files/2166557/preview" alt="mk_plot.png" width="700" height="700" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2166557" data-api-returntype="File" /></p>
+<p>Both of these genes appear to be under positive selection in polar bears. To see more about what these genes may actually be doing, you can look them up in NCBI:</p>
+<p>LYST <a href="https://www.ncbi.nlm.nih.gov/gene/1130%20">https://www.ncbi.nlm.nih.gov/gene/1130 </a></p>
+<p>apoB <a href="https://www.ncbi.nlm.nih.gov/gene/338">https://www.ncbi.nlm.nih.gov/gene/338</a></p>
+<p>&nbsp;</p>

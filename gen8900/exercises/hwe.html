@@ -1,0 +1,277 @@
+<h2 id="1calculatetheexpectedgenotypecountsateachsnp">1. Calculate the Expected Genotype Counts at Each SNP</h2>
+<h3 id="partagetatableofobservedgenotypecounts">Part A: Get a Table of Observed Genotype Counts</h3>
+<p>The first step in this exercise is exactly the same as the exercise last week: get a table of <em>observed</em> genotype counts at each site (row) in the VCF file.</p>
+<p>Remember the key steps in this process are:</p>
+<ul>
+<li>
+<p>Figure out how many total SNPs you have. This is the same as the number of rows in the VCF file. You will use this number to help set up you empty results table.</p>
+</li>
+<li>
+<p>Set up an empty results table before you start your loop. This table will have the same number of rows as your input VCF file, and <em>3</em> columns; one for each genotype (AA, Aa, aa). You don't need a column for the missing data today (just make sure you don't accidentally count missing genotypes as something else!)</p>
+</li>
+</ul>
+<h3 id="partbcalculatepqandn">Part B: Calculate p, q, and N</h3>
+<p>Once you've got your table of observed genotype counts, the next step is to calculate the allele frequencies, <em>p</em> and <em>q</em>, as well as the sample size, <em>N</em>, for each site.</p>
+<p>Remember that to add a new column to an existing table, I can use the command <code>cbind(...)</code>. Below is how to add the empty column for <em>N</em> to the <em>my.results</em> table:</p>
+<pre><code>&gt; N=rep(0, nrow(my.results))
+&gt; my.results=cbind(my.results, N)
+&gt; head(my.results)
+   AA Aa aa N
+1 85  6  0 0
+2 84  7  0 0
+3 85  6  0 0
+4 74  8  0 0
+5 61  0 30 0
+6 65  6  0 0
+</code></pre>
+<p>You can do the same to create the columns for <em>p</em> and <em>q</em>.</p>
+<p>To calculate the values for each column, you need to use the equations that we know from Hardy-Weinberg:</p>
+<p><img class="equation_image" title="p\:=\:\frac{2\left(AA\right)+Aa}{2N}" src="https://clemson.instructure.com/equation_images/p%255C%253A%253D%255C%253A%255Cfrac%257B2%255Cleft%2528AA%255Cright%2529%2BAa%257D%257B2N%257D" alt="LaTeX: p\:=\:\frac{2\left(AA\right)+Aa}{2N}" data-equation-content="p\:=\:\frac{2\left(AA\right)+Aa}{2N}" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;p&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mfrac&gt;
+    &lt;mrow&gt;
+      &lt;mn&gt;2&lt;/mn&gt;
+      &lt;mrow&gt;
+        &lt;mo&gt;(&lt;/mo&gt;
+        &lt;mrow&gt;
+          &lt;mi&gt;A&lt;/mi&gt;
+          &lt;mi&gt;A&lt;/mi&gt;
+        &lt;/mrow&gt;
+        &lt;mo&gt;)&lt;/mo&gt;
+      &lt;/mrow&gt;
+      &lt;mo&gt;+&lt;/mo&gt;
+      &lt;mi&gt;A&lt;/mi&gt;
+      &lt;mi&gt;a&lt;/mi&gt;
+    &lt;/mrow&gt;
+    &lt;mrow&gt;
+      &lt;mn&gt;2&lt;/mn&gt;
+      &lt;mi&gt;N&lt;/mi&gt;
+    &lt;/mrow&gt;
+  &lt;/mfrac&gt;
+&lt;/math&gt;" /></p>
+<p><img class="equation_image" title="q\:=\:\frac{2\left(aa\right)+Aa}{2N}\:=\:1-p" src="https://clemson.instructure.com/equation_images/q%255C%253A%253D%255C%253A%255Cfrac%257B2%255Cleft%2528aa%255Cright%2529%2BAa%257D%257B2N%257D%255C%253A%253D%255C%253A1-p" alt="LaTeX: q\:=\:\frac{2\left(aa\right)+Aa}{2N}\:=\:1-p" data-equation-content="q\:=\:\frac{2\left(aa\right)+Aa}{2N}\:=\:1-p" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;q&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mfrac&gt;
+    &lt;mrow&gt;
+      &lt;mn&gt;2&lt;/mn&gt;
+      &lt;mrow&gt;
+        &lt;mo&gt;(&lt;/mo&gt;
+        &lt;mrow&gt;
+          &lt;mi&gt;a&lt;/mi&gt;
+          &lt;mi&gt;a&lt;/mi&gt;
+        &lt;/mrow&gt;
+        &lt;mo&gt;)&lt;/mo&gt;
+      &lt;/mrow&gt;
+      &lt;mo&gt;+&lt;/mo&gt;
+      &lt;mi&gt;A&lt;/mi&gt;
+      &lt;mi&gt;a&lt;/mi&gt;
+    &lt;/mrow&gt;
+    &lt;mrow&gt;
+      &lt;mn&gt;2&lt;/mn&gt;
+      &lt;mi&gt;N&lt;/mi&gt;
+    &lt;/mrow&gt;
+  &lt;/mfrac&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mn&gt;1&lt;/mn&gt;
+  &lt;mo&gt;&amp;#x2212;&lt;!-- &minus; --&gt;&lt;/mo&gt;
+  &lt;mi&gt;p&lt;/mi&gt;
+&lt;/math&gt;" /></p>
+<p>You can do these calculations inside of another <code>for()</code> loop, OR you can use R's ability to do vectorized arithmetic, and do the calculations all at once. Below is how to calculate <em>N</em> without a loop:</p>
+<pre><code>&gt; my.results$N = my.results$AA + my.results$Aa + my.results$aa
+&gt; head(my.results)
+AA Aa aa  N
+1 85  6  0 91
+2 84  7  0 91
+3 85  6  0 91
+4 74  8  0 82
+5 61  0 30 91
+6 65  6  0 71
+</code></pre>
+<p>Notice that <code>sum(...)</code> will <em>NOT</em> do what we want here:</p>
+<p><code>&gt; sum(my.results$AA, my.results$Aa, my.results$aa)<br /></code><code>[1] 86561</code></p>
+<p>Fill in the columns for&nbsp;<em>p&nbsp;</em>and&nbsp;<em>q</em> in your results table.</p>
+<h3 id="partcusetheallelefrequenciestocalculateexpectedgenotypecounts">Part C: Use the allele frequencies to calculate Expected Genotype Counts</h3>
+<p>Now that you've got the observed allele frequencies, you can again use the equations we know from Hardy-Weinberg to calculate the <em>expected</em> counts for each genotype:</p>
+<p><img class="equation_image" title="Exp\left(AA\right)\:=\:N\cdot p^2" src="https://clemson.instructure.com/equation_images/Exp%255Cleft%2528AA%255Cright%2529%255C%253A%253D%255C%253AN%255Ccdot%2520p%255E2" alt="LaTeX: Exp\left(AA\right)\:=\:N\cdot p^2" data-equation-content="Exp\left(AA\right)\:=\:N\cdot p^2" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;E&lt;/mi&gt;
+  &lt;mi&gt;x&lt;/mi&gt;
+  &lt;mi&gt;p&lt;/mi&gt;
+  &lt;mrow&gt;
+    &lt;mo&gt;(&lt;/mo&gt;
+    &lt;mrow&gt;
+      &lt;mi&gt;A&lt;/mi&gt;
+      &lt;mi&gt;A&lt;/mi&gt;
+    &lt;/mrow&gt;
+    &lt;mo&gt;)&lt;/mo&gt;
+  &lt;/mrow&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mi&gt;N&lt;/mi&gt;
+  &lt;mo&gt;&amp;#x22C5;&lt;!-- &sdot; --&gt;&lt;/mo&gt;
+  &lt;msup&gt;
+    &lt;mi&gt;p&lt;/mi&gt;
+    &lt;mn&gt;2&lt;/mn&gt;
+  &lt;/msup&gt;
+&lt;/math&gt;" /></p>
+<p><img class="equation_image" title="Exp\left(Aa\right)\:=\:\left(2pq\right)\cdot N" src="https://clemson.instructure.com/equation_images/Exp%255Cleft%2528Aa%255Cright%2529%255C%253A%253D%255C%253A%255Cleft%25282pq%255Cright%2529%255Ccdot%2520N" alt="LaTeX: Exp\left(Aa\right)\:=\:\left(2pq\right)\cdot N" data-equation-content="Exp\left(Aa\right)\:=\:\left(2pq\right)\cdot N" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;E&lt;/mi&gt;
+  &lt;mi&gt;x&lt;/mi&gt;
+  &lt;mi&gt;p&lt;/mi&gt;
+  &lt;mrow&gt;
+    &lt;mo&gt;(&lt;/mo&gt;
+    &lt;mrow&gt;
+      &lt;mi&gt;A&lt;/mi&gt;
+      &lt;mi&gt;a&lt;/mi&gt;
+    &lt;/mrow&gt;
+    &lt;mo&gt;)&lt;/mo&gt;
+  &lt;/mrow&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mrow&gt;
+    &lt;mo&gt;(&lt;/mo&gt;
+    &lt;mrow&gt;
+      &lt;mn&gt;2&lt;/mn&gt;
+      &lt;mi&gt;p&lt;/mi&gt;
+      &lt;mi&gt;q&lt;/mi&gt;
+    &lt;/mrow&gt;
+    &lt;mo&gt;)&lt;/mo&gt;
+  &lt;/mrow&gt;
+  &lt;mo&gt;&amp;#x22C5;&lt;!-- &sdot; --&gt;&lt;/mo&gt;
+  &lt;mi&gt;N&lt;/mi&gt;
+&lt;/math&gt;" /></p>
+<p><img class="equation_image" title="Exp\left(aa\right)=q^2\cdot N" src="https://clemson.instructure.com/equation_images/Exp%255Cleft%2528aa%255Cright%2529%253Dq%255E2%255Ccdot%2520N" alt="LaTeX: Exp\left(aa\right)=q^2\cdot N" data-equation-content="Exp\left(aa\right)=q^2\cdot N" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;E&lt;/mi&gt;
+  &lt;mi&gt;x&lt;/mi&gt;
+  &lt;mi&gt;p&lt;/mi&gt;
+  &lt;mrow&gt;
+    &lt;mo&gt;(&lt;/mo&gt;
+    &lt;mrow&gt;
+      &lt;mi&gt;a&lt;/mi&gt;
+      &lt;mi&gt;a&lt;/mi&gt;
+    &lt;/mrow&gt;
+    &lt;mo&gt;)&lt;/mo&gt;
+  &lt;/mrow&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;msup&gt;
+    &lt;mi&gt;q&lt;/mi&gt;
+    &lt;mn&gt;2&lt;/mn&gt;
+  &lt;/msup&gt;
+  &lt;mo&gt;&amp;#x22C5;&lt;!-- &sdot; --&gt;&lt;/mo&gt;
+  &lt;mi&gt;N&lt;/mi&gt;
+&lt;/math&gt;" /></p>
+<p>So, you want to add 3 new columns to your results table, one for each expected count, and you can do this in the same way that we did in Part B.</p>
+<p><em>Optional</em>: Since we usually think of genotype counts as something that should be an integer value (instead of a decimal), you can force R to round to the nearest integer with the <code>as.integer(...)</code> command:</p>
+<pre><code>&gt; 0.25 * 333
+[1] 83.25
+&gt; as.integer(0.25 * 333)
+[1] 83
+</code></pre>
+<h2 id="2usefishersexacttesttoseewhichsitesdiffersignificantlyfromhwe">2: Use Fisher's Exact Test to see which sites differ significantly from HWE</h2>
+<p>With our table of observed and expected counts, we can see how much certain sites may deviate from Hardy-Weinberg expectations, but to assign a significance to this, we want to use a statistical test such as Chi-square or Fisher's Exact Test.</p>
+<h3 id="partacreatetheemptycolumntoholdresults">Part A: Create the empty column to hold results</h3>
+<p>We want to add 1 new column to our results table; this one will hold the p-values for our test at each site. Add a new column called "Pvalue" to your results table.</p>
+<h3 id="partbrunthetestinsideofaloop">Part B: Run the test inside of a loop</h3>
+<p>We need to do this test for each site separately, so you will need a <code>for()</code> loop that goes through every line of your results table.</p>
+<p>Inside of this loop, to run R's <code>fisher.test()</code> command, you need to set up a matrix that looks like this:</p>
+<table style="margin-left: auto; margin-right: auto;" border="black">
+<tbody>
+<tr>
+<td>&nbsp; &nbsp; &nbsp;a &nbsp; &nbsp;&nbsp;</td>
+<td>&nbsp; &nbsp; &nbsp;b &nbsp; &nbsp;&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp; &nbsp; &nbsp;c</td>
+<td>&nbsp; &nbsp; &nbsp;d</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;</p>
+<pre><code>a=my.results$AA[i]
+b=as.integer(my.results$Aa[i]/2)
+c=my.results$Aa[i] - b
+d=my.results$aa[i]
+</code></pre>
+<p>Then, to create the matrix, run Fisher's test and extract the p-value, use the following code inside of your loop:</p>
+<pre><code>x=matrix(c(a,b,c,d), nrow=2, ncol=2, byrow=TRUE)
+test=fisher.test(x)
+pval=test$p.value
+</code></pre>
+<h2 id="3checklociwithsignificantdeviationfromhwe">3: Check Loci with Significant Deviation from HWE</h2>
+<p>After getting a p-value for every site, we'll want to go through and see which loci have significant deviations, and then try and figure out why they might deviate.</p>
+<h3 id="partahowmanylocideviatefromhwe">Part A: How many loci deviate from HWE?</h3>
+<p>Use the <code>which(...)</code> or <code>subset(...)</code> commands to find the loci that deviate significantly (p &lt; 0.05) from Hardy-Weinberg expections. How many loci are there? What proportion of the total data set deviates from HWE?</p>
+<h3 id="partbwhatmightcausetheselocitodeviate">Part B: What might cause these loci to deviate?</h3>
+<p>We saw in class that maping and variant calling errors during the data processing pipeline could cause loci to deviate from HWE.</p>
+<h4 id="differencebetweenobservedandexpectedheterozygosity"><span style="text-decoration: underline;">Difference between Observed and Expected Heterozygosity</span></h4>
+<p>One thing we know is that some types of errors can cause observed Heterozygosity to be too low, while different types of errors might cause it to be too high. To help distinguish these two types of sites, let's first create a new column called <em>Diff</em> that contains <img class="equation_image" title="Het_{obs}-Het_{exp}" src="https://clemson.instructure.com/equation_images/Het_%257Bobs%257D-Het_%257Bexp%257D" alt="LaTeX: Het_{obs}-Het_{exp}" data-equation-content="Het_{obs}-Het_{exp}" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;H&lt;/mi&gt;
+  &lt;mi&gt;e&lt;/mi&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;t&lt;/mi&gt;
+    &lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;
+      &lt;mi&gt;o&lt;/mi&gt;
+      &lt;mi&gt;b&lt;/mi&gt;
+      &lt;mi&gt;s&lt;/mi&gt;
+    &lt;/mrow&gt;
+  &lt;/msub&gt;
+  &lt;mo&gt;&amp;#x2212;&lt;!-- &minus; --&gt;&lt;/mo&gt;
+  &lt;mi&gt;H&lt;/mi&gt;
+  &lt;mi&gt;e&lt;/mi&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;t&lt;/mi&gt;
+    &lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;
+      &lt;mi&gt;e&lt;/mi&gt;
+      &lt;mi&gt;x&lt;/mi&gt;
+      &lt;mi&gt;p&lt;/mi&gt;
+    &lt;/mrow&gt;
+  &lt;/msub&gt;
+&lt;/math&gt;" /></p>
+<pre><code>&gt;my.results$Diff=my.results$Aa-my.results$expAa
+&gt;head(my.results)
+AA Aa aa  N         p          q expAA expAa expaa       Pvalue Diff
+1 85  6  0 91 0.9670330 0.03296703    85     5     0 1.000000e+00    1
+2 84  7  0 91 0.9615385 0.03846154    84     6     0 1.000000e+00    1
+3 85  6  0 91 0.9670330 0.03296703    85     5     0 1.000000e+00    1
+4 74  8  0 82 0.9512195 0.04878049    74     7     0 1.000000e+00    1
+5 61  0 30 91 0.6703297 0.32967033    40    40     9 9.958354e-25  -40
+</code></pre>
+<h4 id="checksampleswhereobservedhetistoolow"><span style="text-decoration: underline;">Check samples where observed Het. is too low</span></h4>
+<p>In next-gen data, a common reason that the observed heterozygosity might be too low is because the read depth coverage was too low to observe both alleles in an individual.</p>
+<p>Use the code below to add a column to your results table that has the <em>average</em> individual read depth for each site:</p>
+<pre><code>my.results$rdDepth=rep(0,nrow(my.results))
+for (i in 1:nrow(my.data)) {
+d=get.field(as.vector(my.data[i,10:ncol(my.data)], mode="character"), my.data[i,9], "DP")
+d[d=="."]=NA
+my.results$rdDepth[i]=mean(as.numeric(d), na.rm=TRUE)
+}
+</code></pre>
+<p>Now, try using <code>subset()</code> or <code>which()</code> to extract the sites where the observed Heterozygosity is significantly lower than the expected Heterozygosity. What can you say about the mean read depth at these sites? How does it compare to the overall mean read depth of the other sites?</p>
+<p><em>Hint</em>: You can take a subset of a table using more than one condition with the <code>&amp;</code> symbol, as in the example code below:</p>
+<pre><code>dataSubset = subset(dataAll, ((columnX &lt; 0) &amp; (columnY &gt;20)))
+</code></pre>
+<h4 id="checksampleswhereobservedhetistoohigh"><span style="text-decoration: underline;">Check samples where observed Het. is too high</span></h4>
+<p>When heterozygosity is too high, it can be a bit trickier to sort out what is going on, but one thing we know might cause this is if we have a paralogous locus that is causing mis-mapping. When this happens, we should see a sites with excess heterozygosity all clustered near each other.</p>
+<p>We could plot this, but at the genome-wide scale, sometimes it is hard to see what's going on in a single region. So, sometimes I find the best thing to do is:</p>
+<ul>
+<li>
+<p>Use <code>subset()</code> or <code>which()</code> to extract the sites from <em>my.data</em> where the observed heterozygosity is significantly larger than expected. You can use a condition on one table to subset another table, like this:</p>
+<p><code>subset(my.data) = my.data[which(<span style="color: #ff00ff;">my.results meet some condition</span>), ]</code></p>
+</li>
+<li>
+<p>Print the results of this table to your screen (there shouldn't be more than 40 rows). You can use <code>print()</code> or simply type the variable name you gave the subset and hit enter.</p>
+</li>
+<li>
+<p>Simply look at the chromosome and position columns (columns 1 and 2), to see if it looks like sites are right next to each other. I also find it helpful to look at the row numbers R assigns.</p>
+</li>
+</ul>
+<p>Which regions do you think might have paralogous loci?</p>

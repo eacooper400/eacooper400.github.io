@@ -1,0 +1,115 @@
+<h2 id="plottingtheallelefrequencyspectrumandcalculatingwatersonstheta">Plotting the Allele Frequency Spectrum and Calculating Waterson's Theta</h2>
+<h3 id="gettingstarted">Getting Started</h3>
+<p>As always, you need to first get any functions that you might need (here is a link to instructions for loading my <a title="R-functions" href="https://clemson.instructure.com/courses/34867/pages/r-functions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/r-functions" data-api-returntype="Page">CompGen17 functions</a> file), and then read in the sample VCF file for this week: <a class="instructure_file_link instructure_scribd_file" title="7_sampleData_AFS.vcf" href="https://clemson.instructure.com/courses/34867/files/2094925/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2094925" data-api-returntype="File">7<em>sampleData</em>AFS.vcf</a>.</p>
+<p>Once you have read this file in, check that it has the correct dimensions:</p>
+<pre><code>dim(my.data)
+[1] 1946   33
+</code></pre>
+<h2 id="plotthederivedallelefrequencyspectrum">1. Plot the Derived Allele Frequency Spectrum</h2>
+<p>The first step in this exercise is to calculate and plot the derived frequency spectrum for the observed data. This file has been created such that the REF allele is always the <strong>ancestral</strong> allele, and the ALT allele is the <strong>derived</strong> allele.</p>
+<h3 id="step1getthederivedallelecountateverysnpsite">Step 1: Get the Derived Allele Count at every SNP site</h3>
+<p>Remember to first set up an empty data structure to hold your results. We only need to save one calculation for each site, so your empty data structure can be as simple as a vector with <em>length=number of sites</em>, or a table with additional information if you prefer.</p>
+<p>Once you've got your empty results vector/table set up, use a loop to count the total number of derived (ALT) alleles at <span style="text-decoration: underline;">each</span> SNP position.</p>
+<p>Here is what my first few values look like:</p>
+<pre><code>head(derived.counts)
+[1]  5  3 25 12  7  5
+</code></pre>
+<h3 id="step2plotahistogramofthecounts">Step 2: Plot a Histogram of the Counts</h3>
+<p>Now that we've got the derived counts, we can use R's built-in histogram function (which we have used before during the <a title="FST Exercises" href="https://clemson.instructure.com/courses/34867/pages/fst-exercises" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/fst-exercises" data-api-returntype="Page">FST week</a>) to plot the frequency of each count.</p>
+<p>The general structure of the histogram command will look like this:</p>
+<pre><code>hist(x=<span style="color: #800000;">YOUR COUNTS</span>, breaks=<span style="color: #800000;">A VECTOR WITH ALL POSSIBLE COUNT VALUES</span>)
+</code></pre>
+<p>The value for "<span style="background-color: #ff6600;">YOUR COUNTS</span>" is what you just calculated in the previous step.</p>
+<p>To get the other value for the break points vector, remember that the range of possible counts will go from 1, all the way up to the total number of chromosomes in the sample (2N). To generate a vector with these values, you can use the <code>seq()</code> function:</p>
+<pre><code>seq(from = <span style="color: #800000;">START OF RANGE</span>, to = <span style="color: #800000;">END OF RANGE</span>, by=1)
+</code></pre>
+<p>We are using <code>by=1</code> because we want every integer value between these two numbers.</p>
+<p>When you have your breakpoint vector, use it in your histogram function to check the plot of the derived spectrum.</p>
+<p>If it looks reasonable to you, go ahead and save the histogram data as a new variable (this will make it easy to extract the counts in each bin later):</p>
+<pre><code>histinfo = hist(x=<span style="color: #800000;">YOUR COUNTS</span>, breaks=<span style="color: #800000;">BREAKPOINT VECTOR</span>)
+</code></pre>
+<h2 id="calculatewatersonstheta">2. Calculate Waterson's Theta</h2>
+<p>Next, we want to calculate Waterson's Theta (<img class="equation_image" title="\theta_w" src="https://clemson.instructure.com/equation_images/%255Ctheta_w" alt="LaTeX: \theta_w" data-equation-content="\theta_w" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;w&lt;/mi&gt;
+  &lt;/msub&gt;
+&lt;/math&gt;" />), which is an estimator of the population mutation rate.</p>
+<p>The formula is:</p>
+<p><img class="equation_image" title="\theta_w=\frac{S_n}{\sum_{i=1}^{2N-1}\left(\frac{1}{i}\right)}" src="https://clemson.instructure.com/equation_images/%255Ctheta_w%253D%255Cfrac%257BS_n%257D%257B%255Csum_%257Bi%253D1%257D%255E%257B2N-1%257D%255Cleft%2528%255Cfrac%257B1%257D%257Bi%257D%255Cright%2529%257D" alt="LaTeX: \theta_w=\frac{S_n}{\sum_{i=1}^{2N-1}\left(\frac{1}{i}\right)}" data-equation-content="\theta_w=\frac{S_n}{\sum_{i=1}^{2N-1}\left(\frac{1}{i}\right)}" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;w&lt;/mi&gt;
+  &lt;/msub&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mfrac&gt;
+    &lt;msub&gt;
+      &lt;mi&gt;S&lt;/mi&gt;
+      &lt;mi&gt;n&lt;/mi&gt;
+    &lt;/msub&gt;
+    &lt;mrow&gt;
+      &lt;munderover&gt;
+        &lt;mo&gt;&amp;#x2211;&lt;!-- &sum; --&gt;&lt;/mo&gt;
+        &lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;
+          &lt;mi&gt;i&lt;/mi&gt;
+          &lt;mo&gt;=&lt;/mo&gt;
+          &lt;mn&gt;1&lt;/mn&gt;
+        &lt;/mrow&gt;
+        &lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;
+          &lt;mn&gt;2&lt;/mn&gt;
+          &lt;mi&gt;N&lt;/mi&gt;
+          &lt;mo&gt;&amp;#x2212;&lt;!-- &minus; --&gt;&lt;/mo&gt;
+          &lt;mn&gt;1&lt;/mn&gt;
+        &lt;/mrow&gt;
+      &lt;/munderover&gt;
+      &lt;mrow&gt;
+        &lt;mo&gt;(&lt;/mo&gt;
+        &lt;mfrac&gt;
+          &lt;mn&gt;1&lt;/mn&gt;
+          &lt;mi&gt;i&lt;/mi&gt;
+        &lt;/mfrac&gt;
+        &lt;mo&gt;)&lt;/mo&gt;
+      &lt;/mrow&gt;
+    &lt;/mrow&gt;
+  &lt;/mfrac&gt;
+&lt;/math&gt;" /></p>
+<p>where S<sub>n</sub> = the number of segregating sites,</p>
+<p>N = the number of individuals,</p>
+<p>2N = the number of chromosomes.</p>
+<p>Here is my calculated value:</p>
+<p><img class="equation_image" title="\theta_w" src="https://clemson.instructure.com/equation_images/%255Ctheta_w" alt="LaTeX: \theta_w" data-equation-content="\theta_w" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;w&lt;/mi&gt;
+  &lt;/msub&gt;
+&lt;/math&gt;" />&nbsp;= 438.4894</p>
+<p>If your answer matches up to mine, then make sure to save your value as the variable <code>theta.w</code>, and then go on to the next step.</p>
+<h2 id="calculateandplottheexpectedderivedfrequencyspectrum">3. Calculate and Plot the EXPECTED derived frequency spectrum</h2>
+<p>For the last part of the exercise, we will now use our estimate of <img class="equation_image" title="\theta_w" src="https://clemson.instructure.com/equation_images/%255Ctheta_w" alt="LaTeX: \theta_w" data-equation-content="\theta_w" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;w&lt;/mi&gt;
+  &lt;/msub&gt;
+&lt;/math&gt;" />&nbsp;to determine what our frequency spectrum should look like under complete neutrality. To get the expected number of sites in each frequency bin, use the equation:</p>
+<p>Exp(x<sub>i</sub>) = theta.w * 1/i</p>
+<p>where <em>i</em> is each value from 1 to 2N-1.</p>
+<h3 id="plottheexpectedneutralspectrumalongsidetheobservedspectrum">Plot the expected neutral spectrum alongside the observed spectrum</h3>
+<p>Lastly, we will plot our observed and expected frequency distributions side by side, to see if our data looks neutral or not.</p>
+<p>First, get your data into a matrix. In the code below, I'm extracting the <span style="text-decoration: underline;">observed counts</span> from <code>histinfo</code>, and my calculations for the <span style="text-decoration: underline;">expected counts</span> are in <code>exp.counts</code>:</p>
+<pre><code>compare.counts=matrix(c(histinfo$counts, exp.counts), ncol=2, byrow=FALSE)
+colnames(compare.counts)=c("Obs", "Exp")
+
+head(compare.counts)
+ Obs       Exp
+[1,] 178 438.48938
+[2,] 179 219.24469
+[3,] 133 146.16313
+[4,] 148 109.62234
+[5,] 114  87.69788
+[6,] 109  73.08156
+</code></pre>
+<p>Now, we can use R's <code>barplot()</code> function:</p>
+<pre><code>barplot(t(compare.counts), beside=T, col=c("lightblue", "black"))
+legend("topright", c("Obs", "Exp"), pch=c(15,15), col=c("lightblue", "black"))
+</code></pre>
+<p>How well does the observed data line up to the neutral distribution? In what ways does it differ? Do you have any hypotheses about what might cause this type of difference?</p>
