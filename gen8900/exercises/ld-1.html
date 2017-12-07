@@ -1,8 +1,63 @@
-<h2 id="calculatethelinkagedisequilibriumstatisticrsquared">Calculate the Linkage Disequilibrium statistic R<sup>2</sup></h2>
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Linkage Disequilibrium I</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/css/1-col-portfolio.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+  <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">LD-ptI-Exercises</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="/compGen8900.html">Gen-8900
+                <span class="sr-only">(current)</span>
+              </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/fst.html">FST-Exercises
+	        <span class="sr-only">(current)</span>
+	      </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/ld-2.html">LD-Part II
+		<span class="sr-only">(current)</span>
+	      </a>
+	      </li>
+	  </ul>
+	 </div>
+	</div>
+	</nav>
+
+	<!--Page Content -->
+	<section id="ld1-exercises">
+	<div class="container">
+	  <div class="row">
+	  <div-class="col-md-12">
+	   <h2 id="calculatethelinkagedisequilibriumstatisticrsquared">Calculate the Linkage Disequilibrium statistic R<sup>2</sup></h2>
 <p><strong>Objective:</strong> The goal for today's exercise is to write and save the code that you will use again next week to estimate linkage disequilibrium (LD) in a larger data file.</p>
 <h3 id="beforestarting">Before Starting:</h3>
-<p>As always, remember to either load my "compGen17_fxns.R" file or copy and paste the <code>read.vcf</code> function into your code.</p>
-<p>Then, load the sample data file for this week: "<a class="instructure_file_link instructure_scribd_file" title="sampleData_LDmini.vcf" href="https://clemson.instructure.com/courses/34867/files/1928856/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/1928856" data-api-returntype="File">sampleData_LDmini.vcf</a>".</p>
+<p>Remember to either load my <a href="https://gist.github.com/eacooper400/c954c757db02eb6c4ccfae1aa090658c">CompGen_Fxns17.R</a> file or copy and paste the <code>read.vcf</code> function into your code.</p>
+<p>Then, load the sample data file for this week: sampleData_LDmini.vcf </p>
 <p>You should have a total a 5 rows and 42 columns after reading in the data. You can check with the <code>dim()</code> function:</p>
 <pre><code>dim(my.data)
 [1]  5 42
@@ -211,3 +266,28 @@ if (g[1]=="0") {
 9           <span style="color: #008080;">3</span>           <span style="color: #800080;">5</span>          1518 -0.011937557 0.051150121
 10          <span style="color: #008080;">4</span>           <span style="color: #800080;">5</span>          1426 -0.001377410 0.001488095
 </code></pre>
+
+<a href="/gen8900/r-code/5_LDpt1_solutions.R"
+download="5_LDpt1_solutions.R">R code solution for LD I Exercises</a>
+
+	  </div>
+	</div>
+</div>
+</section>
+
+<!-- Footer -->
+    <footer class="py-5 bg-dark">
+      <div class="container">
+	<a class="navbar-brand" href="#top">Back to Top</a>
+        <p class="m-0 text-center text-white">Copyright &copy; LCooper CompGen-8900  2017</p>
+      </div>
+      <!-- /.container -->
+    </footer>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/popper/popper.min.js"></script>
+      <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+      
+</body>
+</html>
