@@ -1,3 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Sliding Windows</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/css/1-col-portfolio.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+  <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">Sliding-Window-Exercises</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="/compGen8900.html">Gen-8900
+                <span class="sr-only">(current)</span>
+              </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/afs.html">TajimasD-Exercises
+	        <span class="sr-only">(current)</span>
+	      </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/mk.html">MK-Test-Exercises
+		<span class="sr-only">(current)</span>
+	      </a>
+	      </li>
+	  </ul>
+	 </div>
+	</div>
+	</nav>
+
+	<!--Page Content -->
+	<section id="slide-wind-exercises">
+	<div class="container">
+	  <div class="row">
+	  <div-class="col-md-12">
+<h2 id="slidingwindowscanoftajimasd">Sliding Window Scan with Multiple
+	Stats</h2>
+<h3 id="beforestarting">Before Starting</h3>
+<p>Remember to either load my <a
+	href="https://gist.github.com/eacooper400/c954c757db02eb6c4ccfae1aa090658c">CompGen_Fxns17.R</a>
+	file or copy and paste the <code>read.vcf</code> function into
+	    your code.</p>
 <h2 id="slidingwindowtestswithmultipletests">Sliding Windows with Multiple Statistics</h2>
 <p>For today's exercises, we will be scanning a region of the <em>Heliconius</em> butterfly genome that is potentially experiencing selection for color pattern differences.</p>
 <p>Our goal is to plot Tajima's D in 10 kb sliding windows (with 2kb of overlap), along with its components: <img class="equation_image" title="\theta_W" src="https://clemson.instructure.com/equation_images/%255Ctheta_W" alt="LaTeX: \theta_W" data-equation-content="\theta_W" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
@@ -11,19 +73,23 @@
   &lt;mi&gt;&amp;#x03C0;&lt;!-- &pi; --&gt;&lt;/mi&gt;
 &lt;/math&gt;" />, except that it only compares pairs of sequences from <span style="text-decoration: underline;">different populations</span> (instead of all pairs).</p>
 <h3 id="gettingstarted">Getting Started</h3>
-<p>First, I go through the usual steps of setting my working directory, then loading the functions from <a title="R-functions" href="https://clemson.instructure.com/courses/34867/pages/r-functions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/r-functions" data-api-returntype="Page">CompGen17_fxns.R</a>, and reading in the VCF file for this week: <a class="instructure_file_link instructure_scribd_file" title="heliconius.vcf" href="https://clemson.instructure.com/courses/34867/files/2193753/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2193753" data-api-returntype="File">heliconius.vcf</a>. Also, I've recently learned that you can globally set the option <code>stringsAsFactors=FALSE</code> for an entire R session, so I'm going to do that as well:</p>
+<p>First, I go through the usual steps of setting my working
+	directory, loading my functions and reading in the VCF file
+	for this week:heliconius.vcf. Also, I've recently learned that you can globally set the option <code>stringsAsFactors=FALSE</code> for an entire R session, so I'm going to do that as well:</p>
 <pre><code>library(devtools)
 source_gist("c954c757db02eb6c4ccfae1aa090658c", filename="compGen17_fxns.R", quiet=TRUE)
 options(stringsAsFactors=FALSE)
 my.data=read.vcf("heliconius.vcf", header=TRUE)
 </code></pre>
 <h3 id="setuptheresultstabledefinethewindowpositions">Set up the Results Table, Define the Window Positions</h3>
-<p>Next, we want to follow the same procedure we used for the <a title="Tajima's D SOLUTIONS" href="https://clemson.instructure.com/courses/34867/pages/tajimas-d-solutions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/tajimas-d-solutions" data-api-returntype="Page">Tajima's D exercises</a> to find the <span style="text-decoration: underline;">Start</span> and <span style="text-decoration: underline;">End</span> positions of all of our windows, and then set up our results table.</p>
-<p>We are going to allow <strong>2000 bp of overlap</strong> between our windows this time (to make sure we don't miss anything), so the set-up for our scan will look like this:</p>
-<p><img src="https://clemson.instructure.com/courses/34867/files/2197218/preview" alt="slidingWin.png" width="720" height="405" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2197218" data-api-returntype="File" /></p>
+<p>Next, we want to follow the same procedure we used for the Tajima's D exercises to find the <span style="text-decoration: underline;">Start</span> and <span style="text-decoration: underline;">End</span> positions of all of our windows, and then set up our results table.</p>
+<p>We are going to allow <strong>2000 bp of overlap</strong> between our windows this time (to make sure we don't miss anything). </p>
 <ol>
 <li>
-<p>Find all of the Window <span style="color: #00ff00;">START</span> positions. I recommend using the <code>seq(from, to, by)</code> function, like we did to find the sliding windows <a title="Tajima's D SOLUTIONS" href="https://clemson.instructure.com/courses/34867/pages/tajimas-d-solutions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/tajimas-d-solutions" data-api-returntype="Page">2 weeks ago</a>. Finding the <code>from</code> and <code>to</code> values will be exactly the same, but your <code>by</code> value is going to change a bit (because of the overlaps and the new window size).</p>
+<p>Find all of the Window <span style="color: #00ff00;">START</span>
+	positions. I recommend using the <code>seq(from, to,
+	by)</code> function, like we did to find the sliding windows
+	before.  Finding the <code>from</code> and <code>to</code> values will be exactly the same, but your <code>by</code> value is going to change a bit (because of the overlaps and the new window size).</p>
 </li>
 <li>
 <p>Find all of the Window <span style="color: #ff0000;">END</span> positions. Then put the Start and the End positions into a data frame like this:</p>
@@ -435,22 +501,45 @@ legend(lgd$rect$left, lgd$rect$top, legend=c(NA,NA), pch=c(22,22),
 <li>Discussed during the M-K Test week; this test compares the rate of divergence between species to the rate of polymorphism within species, with the expectation that under neutrality the ratio of these rates will be the same at any one locus, even if it differs across loci because of variation in mutation rate.</li>
 </ul>
 </li>
-<li>KaKs Ratio <span style="color: #ff0000;">(I still need to upload code for this!)</span>
+<li>KaKs Ratio <span style="color: #ff0000;"></span><a
+	href="/gen8900/r-code/kaks.R" download="kaks.R">KaKs R script</a>
 <ul>
 <li>Also discussed during M-K Test week; this test examines the rate of non-synonymous polymorphism&nbsp; versus synonymous polymorphism within a single gene.&nbsp; Under neutrality, the ratio is expected to be 1; values &gt;1 indicate positive selection, values &lt;1 indicate negative/purifying selection.</li>
 </ul>
 </li>
 </ol>
 <p>For tests 1,2, and 3 above, I have found an existing R package called "sfsr" on github and modified it to make it compatible with VCF files.&nbsp; This package can calculate the Fu and Li tests, HKA, and I've also added a Fay and Wu H function to it.&nbsp; Instructions to download and use the package are on my <a href="https://github.com/eacooper400/sfsr/blob/master/Using_SFSR_w_VCF.md">GitHub page here</a>.</p>
-<p><strong>Ideas for what you might want to try could include, but are not limited to:</strong></p>
-<ul>
-<li><strong>Zooming in on a region that looks interesting, and calculating either a new statistic or even the same statistics in a different window size.</strong></li>
-<li><strong>Comparing one of the Tajima's D variants (Fu and Li, Fay and Wu) with the original Tajima'sD</strong></li>
-<li><strong>Performing a SNP by SNP calculation of something like Heterozygosity or Fst, and comparing this with the pattern seen in the windows</strong></li>
-<li><strong>Locating any nearby genes using the <a class="instructure_file_link" title="Hmel218003.gff" href="https://clemson.instructure.com/courses/34867/files/2207066/download?wrap=1" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2207066" data-api-returntype="File">gff3 file found here</a></strong></li>
-<li><strong>Annotating variants with the workflow we discussed last week to look at nonsynonymous vs. synonymous variation (you could also try KaKs)</strong></li>
-<li><strong>Trying a PCA, or even trying multiple PCAs using different genomic regions, to see if some are more structured that others..</strong></li>
-<li><strong>Whatever else you might think of!</strong></li>
-</ul>
+
 <p><span style="text-decoration: underline;"><strong>Here is a Nice Table of when to think about/use different Methods:</strong></span></p>
-<p><strong><img src="https://clemson.instructure.com/courses/34867/files/2207625/preview" alt="table_of_tests.jpg" width="800" height="459" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2207625" data-api-returntype="File" /></strong></p>
+<p><strong><img
+src="https://clemson.instructure.com/courses/34867/files/2207625/preview"
+alt="table_of_tests.jpg" width="800" height="459"
+data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/files/2207625"
+data-api-returntype="File" /></strong></p>
+
+
+
+<a href="/gen8900/r-code/9_slideWin_solutions.R"
+download="9_slideWin_solutions.R">R code solution Sliding Window Exercises</a>
+
+	  </div>
+	</div>
+</div>
+</section>
+
+<!-- Footer -->
+    <footer class="py-5 bg-dark">
+      <div class="container">
+	<a class="navbar-brand" href="#top">Back to Top</a>
+        <p class="m-0 text-center text-white">Copyright &copy; LCooper CompGen-8900  2017</p>
+      </div>
+      <!-- /.container -->
+    </footer>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/popper/popper.min.js"></script>
+      <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+      
+</body>
+</html>
