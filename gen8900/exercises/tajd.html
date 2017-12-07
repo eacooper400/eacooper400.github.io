@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Tajima's D</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/css/1-col-portfolio.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+  <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">TajimasD-Exercises</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="/compGen8900.html">Gen-8900
+                <span class="sr-only">(current)</span>
+              </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/afs.html">AFS-Exercises
+	        <span class="sr-only">(current)</span>
+	      </a>
+	    </li>
+	    <li class="nat-item active">
+	      <a class="nav-link" href="/gen8900/exercises/slide-window.html">Sliding-Window-Exercises
+		<span class="sr-only">(current)</span>
+	      </a>
+	      </li>
+	  </ul>
+	 </div>
+	</div>
+	</nav>
+
+	<!--Page Content -->
+	<section id="tajd-exercises">
+	<div class="container">
+	  <div class="row">
+	  <div-class="col-md-12">
+<h2 id="slidingwindowscanoftajimasd">Sliding Window Scan of Tajima's D</h2>
+<h3 id="beforestarting">Before Starting</h3>
+p>Remember to either load my <a href="https://gist.github.com/eacooper400/c954c757db02eb6c4ccfae1aa090658c">CompGen_Fxns17.R</a>
+	file or copy and paste the <code>read.vcf</code> function into
+	    your code.</p>
+<p>Read in the sample data file for this week: sampleData_Tajima.vcf.</p>
+<p>Check that the dimensions of your table match up to mine:</p>
+<pre><code>dim(my.data)
+[1] 1098  364
+</code></pre>
+<h3 id="idividesampledataintowindowsof600bp">I. Divide Sample Data into Windows of 600 bp</h3>
+<p>To create the sample data for this week's exercise, I extracted a 30kb section from sorghum chromosome 1, that extends from roughly position 68,020,000 to position 68,050,000:</p>
+<pre><code>min(my.data$POS)
+[1] 68020018
+max(my.data$POS)
+[1] 68049882
+</code></pre>
+<p>To do a sliding window scan of Tajima's D, we need to first figure out how to divide the data from this VCF file into <strong>windows</strong> of 600bp each, and then count the total number of SNPs in each window.</p>
+<p>I suggest contstructing a results table with <strong>3 columns</strong>: Window Start Position, Window End Position, and Number of SNPs:</p>
+<table style="width: 151.835px; border-color: black;" border="black">
+<tbody>
+<tr>
+<td style="width: 34px;">Start</td>
+<td style="width: 28px;">End</td>
+<td style="width: 63.8352px;">SNPs</td>
+</tr>
+<tr>
+<td style="width: 34px;">1</td>
+<td style="width: 28px;">600</td>
+<td style="width: 63.8352px;">###</td>
+</tr>
+<tr>
+<td style="width: 34px;">601</td>
+<td style="width: 28px;">1200</td>
+<td style="width: 63.8352px;">###</td>
+</tr>
+<tr>
+<td style="width: 34px;">1201</td>
+<td style="width: 28px;">1800</td>
+<td style="width: 63.8352px;">###</td>
+</tr>
+</tbody>
+</table>
+<p>The number of rows in this table will be equal to the total number of 600bp windows in this region, which we also need to figure out.</p>
+<p>Here are the first few rows of my results table, after this step:</p>
+<pre><code>head(my.results)
+   Start      End     SNPs
+1 68020018 68020618   61
+2 68020618 68021218   46
+3 68021218 68021818   25
+4 68021818 68022418   24
+5 68022418 68023018   33
+6 68023018 68023618   17
+</code></pre>
+<h3 id="iicalculatewatersonsthetaforeachwindow">II. Calculate Waterson's Theta for Each Window</h3>
+<p>To calculate <img class="equation_image" title="\theta_W" src="https://clemson.instructure.com/equation_images/%255Ctheta_W" alt="LaTeX: \theta_W" data-equation-content="\theta_W" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;W&lt;/mi&gt;
+  &lt;/msub&gt;
+&lt;/math&gt;" />, we can recall from last week that the two values we need from the data are:</p>
+<ul>
+<li>S<sub>n</sub> : The number of segregating sites (i.e. the number of SNPs)</li>
+<li>2N: The number of chromosomes (i.e. 2 times the number of individuals)</li>
+</ul>
+<p>We've already calculated the number of SNPs in the previous step. Since this file has no missing data, the value for 2N will be the same for each window, but I'm going to go ahead and make a whole column of this value and add it to my results table, to make my&nbsp;<img class="equation_image" title="\theta_W" src="https://clemson.instructure.com/equation_images/%255Ctheta_W" alt="LaTeX: \theta_W" data-equation-content="\theta_W" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;W&lt;/mi&gt;
+  &lt;/msub&gt;
+&lt;/math&gt;" />&nbsp;calculation easier to do with R's vectorized math:</p>
+<pre><code>my.results$Nchr = <span style="background-color: #ffcc99;">YOUR CALCULATION FOR 2N</span>
+head(my.results)
+ Start      End      SNPs Nchr
+1 68020018 68020618   61  710
+2 68020618 68021218   46  710
+3 68021218 68021818   25  710
+4 68021818 68022418   24  710
+5 68022418 68023018   33  710
+6 68023018 68023618   17  710
+</code></pre>
+<p>Now that I've the values for S<sub>n</sub> and 2N conveniently in my table, I can use the equation for&nbsp;<img class="equation_image" title="\theta_W" src="https://clemson.instructure.com/equation_images/%255Ctheta_W" alt="LaTeX: \theta_W" data-equation-content="\theta_W" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;W&lt;/mi&gt;
+  &lt;/msub&gt;
+&lt;/math&gt;" />:</p>
+<p><img class="equation_image" title="\theta_W\:=\:\frac{S_n}{\sum^{2N-1}_{i=1}\left(\frac{1}{i}\right)}" src="https://clemson.instructure.com/equation_images/%255Ctheta_W%255C%253A%253D%255C%253A%255Cfrac%257BS_n%257D%257B%255Csum%255E%257B2N-1%257D_%257Bi%253D1%257D%255Cleft%2528%255Cfrac%257B1%257D%257Bi%257D%255Cright%2529%257D" alt="LaTeX: \theta_W\:=\:\frac{S_n}{\sum^{2N-1}_{i=1}\left(\frac{1}{i}\right)}" data-equation-content="\theta_W\:=\:\frac{S_n}{\sum^{2N-1}_{i=1}\left(\frac{1}{i}\right)}" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;W&lt;/mi&gt;
+  &lt;/msub&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mfrac&gt;
+    &lt;msub&gt;
+      &lt;mi&gt;S&lt;/mi&gt;
+      &lt;mi&gt;n&lt;/mi&gt;
+    &lt;/msub&gt;
+    &lt;mrow&gt;
+      &lt;munderover&gt;
+        &lt;mo&gt;&amp;#x2211;&lt;!-- &sum; --&gt;&lt;/mo&gt;
+        &lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;
+          &lt;mi&gt;i&lt;/mi&gt;
+          &lt;mo&gt;=&lt;/mo&gt;
+          &lt;mn&gt;1&lt;/mn&gt;
+        &lt;/mrow&gt;
+        &lt;mrow class=&quot;MJX-TeXAtom-ORD&quot;&gt;
+          &lt;mn&gt;2&lt;/mn&gt;
+          &lt;mi&gt;N&lt;/mi&gt;
+          &lt;mo&gt;&amp;#x2212;&lt;!-- &minus; --&gt;&lt;/mo&gt;
+          &lt;mn&gt;1&lt;/mn&gt;
+        &lt;/mrow&gt;
+      &lt;/munderover&gt;
+      &lt;mrow&gt;
+        &lt;mo&gt;(&lt;/mo&gt;
+        &lt;mfrac&gt;
+          &lt;mn&gt;1&lt;/mn&gt;
+          &lt;mi&gt;i&lt;/mi&gt;
+        &lt;/mfrac&gt;
+        &lt;mo&gt;)&lt;/mo&gt;
+      &lt;/mrow&gt;
+    &lt;/mrow&gt;
+  &lt;/mfrac&gt;
+&lt;/math&gt;" /></p>
+<p>Here is what my first few results look like after I do my calculation:</p>
+<pre><code>head(my.results)
+ Start      End      SNPs Nchr   ThetaW
+1 68020018 68020618   61  710 8.541293
+2 68020618 68021218   46  710 6.440975
+3 68021218 68021818   25  710 3.500530
+4 68021818 68022418   24  710 3.360509
+5 68022418 68023018   33  710 4.620699
+6 68023018 68023618   17  710 2.380360
+</code></pre>
+<h3 id="iiicalculatenucleotidediversityforeachwindow">III. Calculate Nucleotide Diversity for Each Window</h3>
+<p>The other estimator of&nbsp;the population mutation rate is nucleotide diversity (<img class="equation_image" title="\Pi" src="https://clemson.instructure.com/equation_images/%255CPi" alt="LaTeX: \Pi" data-equation-content="\Pi" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi mathvariant=&quot;normal&quot;&gt;&amp;#x03A0;&lt;!-- &Pi; --&gt;&lt;/mi&gt;
+&lt;/math&gt;" />), which is the average number of differences between sequences in a region. Go ahead and add a column for this to your results table:</p>
+<pre><code>my.results$Pi = rep(0, nrow(my.results))
+</code></pre>
+<p>To calculate this value, we are going to use a formula from <a href="https://binhe.org/2011/12/29/calculate-nucleotide-diversity-per-base-pair-summation-method/">Begun et al. (2007)</a>:</p>
+<p><img class="equation_image" title="\Pi\:=\:\sum\left(\frac{2j\left(c-j\right)}{c\left(c-1\right)}\right)" src="https://clemson.instructure.com/equation_images/%255CPi%255C%253A%253D%255C%253A%255Csum%255Cleft%2528%255Cfrac%257B2j%255Cleft%2528c-j%255Cright%2529%257D%257Bc%255Cleft%2528c-1%255Cright%2529%257D%255Cright%2529" alt="LaTeX: \Pi\:=\:\sum\left(\frac{2j\left(c-j\right)}{c\left(c-1\right)}\right)" data-equation-content="\Pi\:=\:\sum\left(\frac{2j\left(c-j\right)}{c\left(c-1\right)}\right)" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi mathvariant=&quot;normal&quot;&gt;&amp;#x03A0;&lt;!-- &Pi; --&gt;&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;&amp;#x2211;&lt;!-- &sum; --&gt;&lt;/mo&gt;
+  &lt;mrow&gt;
+    &lt;mo&gt;(&lt;/mo&gt;
+    &lt;mfrac&gt;
+      &lt;mrow&gt;
+        &lt;mn&gt;2&lt;/mn&gt;
+        &lt;mi&gt;j&lt;/mi&gt;
+        &lt;mrow&gt;
+          &lt;mo&gt;(&lt;/mo&gt;
+          &lt;mrow&gt;
+            &lt;mi&gt;c&lt;/mi&gt;
+            &lt;mo&gt;&amp;#x2212;&lt;!-- &minus; --&gt;&lt;/mo&gt;
+            &lt;mi&gt;j&lt;/mi&gt;
+          &lt;/mrow&gt;
+          &lt;mo&gt;)&lt;/mo&gt;
+        &lt;/mrow&gt;
+      &lt;/mrow&gt;
+      &lt;mrow&gt;
+        &lt;mi&gt;c&lt;/mi&gt;
+        &lt;mrow&gt;
+          &lt;mo&gt;(&lt;/mo&gt;
+          &lt;mrow&gt;
+            &lt;mi&gt;c&lt;/mi&gt;
+            &lt;mo&gt;&amp;#x2212;&lt;!-- &minus; --&gt;&lt;/mo&gt;
+            &lt;mn&gt;1&lt;/mn&gt;
+          &lt;/mrow&gt;
+          &lt;mo&gt;)&lt;/mo&gt;
+        &lt;/mrow&gt;
+      &lt;/mrow&gt;
+    &lt;/mfrac&gt;
+    &lt;mo&gt;)&lt;/mo&gt;
+  &lt;/mrow&gt;
+&lt;/math&gt;" /></p>
+<p>j = the derived allele count at a single SNP position</p>
+<p>c = the number of chromosomes (same as 2N) at a single SNP position</p>
+<p>the <img class="equation_image" title="\sum" src="https://clemson.instructure.com/equation_images/%255Csum" alt="LaTeX: \sum" data-equation-content="\sum" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mo&gt;&amp;#x2211;&lt;!-- &sum; --&gt;&lt;/mo&gt;
+&lt;/math&gt;" />&nbsp;is summing over ALL SNP positions in a region</p>
+<p>To help you with this calculation, I have added a function that will calculate the derived allele count (<em>j</em>) at a single row of a VCF file to the <a title="R-functions" href="https://clemson.instructure.com/courses/34867/pages/r-functions" data-api-endpoint="https://clemson.instructure.com/api/v1/courses/34867/pages/r-functions" data-api-returntype="Page">CompGen_fxns.R</a> file, so if you loaded those functions, you will automatically have <code>derivedCount()</code> available to you.</p>
+<p>If you want to paste the source code for the function directly into your own code instead, here it is:</p>
+<pre><code>derivedCount &lt;- function(row) {
+row=as.vector(row, mode="character")
+x=count.genotypes(get.field(row[10:length(row)], row[9], "GT"))
+dc=(2*x["aa"])+x["Aa"]
+return(unname(dc))
+}
+</code></pre>
+<p>Remember that within EACH 600bp window, you have to get the count of the derived sites at EACH SNP position within that window. To do this, you can use a loop:</p>
+<pre><code>my.data.window = <span style="background-color: #ffcc99;">SUBSET OF my.data THAT FALLS WITHIN THE WINDOW</span>
+J = rep(0, nrow(my.data.window))
+for (i in 1:nrow(my.data.window)) {
+    J[i] = derivedCount(row = my.data.window[i,])
+}
+</code></pre>
+<p>OR, you can skip the loop and use the <code>apply</code> function, like this:</p>
+<pre><code>my.data.window = <span style="background-color: #ffcc99;">SUBSET OF my.data THAT FALLS WITHIN THE WINDOW</span>
+J = apply(my.data.window, 1, derivedCount)
+</code></pre>
+<p>The above argument takes:</p>
+<ol>
+<li>
+<p>The data object to apply a function to (in this case our data subset from the window)</p>
+</li>
+<li>
+<p>The dimension of the data to loop through (1=go row by row, 2 = column by column)</p>
+</li>
+<li>
+<p>The function to be applied (in this case the derivedCount function)</p>
+<pre><code>head(J)
+1   2   3   4   5   6 
+2   8   7 122  84 122
+</code></pre>
+</li>
+</ol>
+<p>Once you've got the <em>J</em> vector, you should be able to do the rest of the Pi calculation pretty easily with R's vectorized math. For example, to get <em>(c-j)</em></p>
+<pre><code>nc=my.results$Nchr[1]
+nc
+[1] 710
+head(nc-J)
+1   2   3   4   5   6 
+708 702 703 588 626 588
+</code></pre>
+<p>Here is what the first few lines of my results table look like after my <img class="equation_image" title="\prod" src="https://clemson.instructure.com/equation_images/%255Cprod" alt="LaTeX: \prod" data-equation-content="\prod" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mo&gt;&amp;#x220F;&lt;!-- &prod; --&gt;&lt;/mo&gt;
+&lt;/math&gt;" />&nbsp;calculation:</p>
+<pre><code>head(my.results)
+ Start      End       SNPs Nchr   ThetaW     Pi
+1 68020018 68020618   61  710 8.541293 7.120912
+2 68020618 68021218   46  710 6.440975 3.952895
+3 68021218 68021818   25  710 3.500530 2.525795
+4 68021818 68022418   24  710 3.360509 2.114297
+5 68022418 68023018   33  710 4.620699 2.141604
+6 68023018 68023618   17  710 2.380360 1.177584
+</code></pre>
+<h3 id="ivcalculateandplottajimasd">IV. Calculate and Plot Tajima's D</h3>
+<p>The formula for Tajima's D is:</p>
+<p><img class="equation_image" title="D\:=\:\frac{\Pi\:-\theta_W}{\sqrt[]{var\left(d\right)}}" src="https://clemson.instructure.com/equation_images/D%255C%253A%253D%255C%253A%255Cfrac%257B%255CPi%255C%253A-%255Ctheta_W%257D%257B%255Csqrt%255B%255D%257Bvar%255Cleft%2528d%255Cright%2529%257D%257D" alt="LaTeX: D\:=\:\frac{\Pi\:-\theta_W}{\sqrt[]{var\left(d\right)}}" data-equation-content="D\:=\:\frac{\Pi\:-\theta_W}{\sqrt[]{var\left(d\right)}}" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi&gt;D&lt;/mi&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+  &lt;mfrac&gt;
+    &lt;mrow&gt;
+      &lt;mi mathvariant=&quot;normal&quot;&gt;&amp;#x03A0;&lt;!-- &Pi; --&gt;&lt;/mi&gt;
+      &lt;mspace width=&quot;mediummathspace&quot; /&gt;
+      &lt;mo&gt;&amp;#x2212;&lt;!-- &minus; --&gt;&lt;/mo&gt;
+      &lt;msub&gt;
+        &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+        &lt;mi&gt;W&lt;/mi&gt;
+      &lt;/msub&gt;
+    &lt;/mrow&gt;
+    &lt;msqrt&gt;
+      &lt;mi&gt;v&lt;/mi&gt;
+      &lt;mi&gt;a&lt;/mi&gt;
+      &lt;mi&gt;r&lt;/mi&gt;
+      &lt;mrow&gt;
+        &lt;mo&gt;(&lt;/mo&gt;
+        &lt;mi&gt;d&lt;/mi&gt;
+        &lt;mo&gt;)&lt;/mo&gt;
+      &lt;/mrow&gt;
+    &lt;/msqrt&gt;
+  &lt;/mfrac&gt;
+&lt;/math&gt;" /></p>
+<p>We've just finished calculating <img class="equation_image" title="\Pi" src="https://clemson.instructure.com/equation_images/%255CPi" alt="LaTeX: \Pi" data-equation-content="\Pi" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;mi mathvariant=&quot;normal&quot;&gt;&amp;#x03A0;&lt;!-- &Pi; --&gt;&lt;/mi&gt;
+&lt;/math&gt;" />and <img class="equation_image" title="\theta_W" src="https://clemson.instructure.com/equation_images/%255Ctheta_W" alt="LaTeX: \theta_W" data-equation-content="\theta_W" data-mathml="&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;
+  &lt;msub&gt;
+    &lt;mi&gt;&amp;#x03B8;&lt;!-- &theta; --&gt;&lt;/mi&gt;
+    &lt;mi&gt;W&lt;/mi&gt;
+  &lt;/msub&gt;
+&lt;/math&gt;" />, so now the last ingredient is to get the square root of the variance(d). The formula for the variance relies on <em>n</em> (in this case, the same as 2N, or the number of chromosomes), and <em>S</em> (the same as S<sub>n</sub>, or the number of SNPs).</p>
+<p>The formula itself is somewhat long, so below I've provided you with a function that will do this calculation (but feel free to do your own calculation if you want!):</p>
+<pre style="padding-left: 30px;"><code>variance.d &lt;- function(n,S) {
+a1=sum(1/(seq(from=1, to=(n-1), by=1)))
+a2=sum(1/((seq(from=1, to=(n-1), by=1))**2))
+b1=(n+1)/(3*(n-1))
+b2=(2*((n**2)+n+3))/((9*n)*(n-1))
+c1=b1 - (1/a1)
+c2=b2-((n+2)/(a1*n)) + (a2/(a1**2))
+e1=c1/a1
+e2=c2/((a1**2)+a2)
+var=(e1*S) + (e2*S*(S-1))
+return(var)
+}
+</code></pre>
+<p>Set up a new column in your results table called <em>varD</em>, and then calculate the variance for every window.</p>
+<pre><code>head(my.results)
+ Start      End       SNPs Nchr   ThetaW    Pi     varD
+1 68020018 68020618   61  710 8.541293 7.120912 9.629897
+2 68020618 68021218   46  710 6.440975 3.952895 5.759211
+3 68021218 68021818   25  710 3.500530 2.525795 1.986663
+4 68021818 68022418   24  710 3.360509 2.114297 1.854930
+5 68022418 68023018   33  710 4.620699 2.141604 3.197334
+6 68023018 68023618   17  710 2.380360 1.177584 1.054751
+</code></pre>
+<p>Now, you can run standard math functions on the columns to create a new column for <em>TajimaD</em>. (<strong>Hint:</strong> R has a function called <code>sqrt()</code> for taking the square root of a number).</p>
+<pre><code>head(my.results)
+ Start      End     SNPs Nchr   ThetaW       Pi     varD    TajimaD
+1 68020018 68020618   61  710 8.541293 7.120912 9.629897 -0.4577136
+2 68020618 68021218   46  710 6.440975 3.952895 5.759211 -1.0367707
+3 68021218 68021818   25  710 3.500530 2.525795 1.986663 -0.6915510
+4 68021818 68022418   24  710 3.360509 2.114297 1.854930 -0.9150145
+5 68022418 68023018   33  710 4.620699 2.141604 3.197334 -1.3864341
+</code></pre>
+<p>Finally, we can plot the results, and see if we can determine any genes that might be under selection:</p>
+<pre><code>plot(my.results$Start, my.results$TajimaD, pch=20,xlab="Position",ylab="Tajima's D", type="l", ylim=c(-2.2,0))
+</code></pre>
+<p>Since a good rule of thumb is that anything under -2 or over +2 might be significant, here is how to draw a semi-transparent box that will highlight the graph area under -2:</p>
+<pre><code>rect(68010000, -3, 68060000, -2, col=rgb(1,0,0,0.4), border=NA)
+</code></pre>
+<p>Do you see any points that might be significant? What kind of selection do you think they are experiencing?</p>
+<p>Lastly, use the code below to draw some boxes at the top of the graph outlining the transcripts that map back to this region:</p>
+<pre><code>rect(68023734,-0.4,68024960,-0.3, col="goldenrod")
+rect(68028443,-0.4,68029634,-0.3, col="goldenrod")
+rect(68034103,-0.4,68036074,-0.3, col="goldenrod")
+</code></pre>
+<p>Do you think the 1st, 2nd, or 3rd gene is the best candidate for selection?</p>
+
+
+<a href="/gen8900/r-code/8_TajimaD_solutions.R"
+download="8_TajimaD_solutions.R">R code solution Tajima's D Exercises</a>
+
+	  </div>
+	</div>
+</div>
+</section>
+
+<!-- Footer -->
+    <footer class="py-5 bg-dark">
+      <div class="container">
+	<a class="navbar-brand" href="#top">Back to Top</a>
+        <p class="m-0 text-center text-white">Copyright &copy; LCooper CompGen-8900  2017</p>
+      </div>
+      <!-- /.container -->
+    </footer>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/popper/popper.min.js"></script>
+      <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+      
+</body>
+</html>
